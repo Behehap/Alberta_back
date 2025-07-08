@@ -14,7 +14,7 @@ type User struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
 	Password  string `json:"-"`
-	CreatedAt string `json:"created_ad"`
+	CreatedAt string `json:"created_at"`
 }
 
 func (s *UserStore) Create(ctx context.Context, user *User) error {
