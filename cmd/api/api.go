@@ -17,6 +17,14 @@ type application struct {
 
 type config struct {
 	addr string
+	db   dbConfig
+}
+
+type dbConfig struct {
+	addr         string
+	maxOpenConns int
+	maxIdleConns int
+	maxIdleTime  string
 }
 
 func (app *application) mount() http.Handler {
@@ -49,7 +57,7 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	log.Printf("server has started at $s", app.config.addr)
+	log.Printf("server has started at %s", app.config.addr)
 
 	return srv.ListenAndServe()
 }
