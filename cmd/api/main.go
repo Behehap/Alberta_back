@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	_ "github.com/lib/pq" // PostgreSQL driver
+
 	"github.com/Behehap/Alberta/internal/db"
 	"github.com/Behehap/Alberta/internal/env"
 	"github.com/Behehap/Alberta/internal/store"
@@ -13,7 +15,7 @@ func main() {
 		addr: env.GetString("ADDR", ":8080"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/social?sslmode=disable"),
-			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNES", 30),
+			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_CONNS", "15m"),
 		},
