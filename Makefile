@@ -14,3 +14,17 @@ migrate-up:
 .PHONY:migrate-down
 migrate-down:
 	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) down $(filter-out $@,$(MAKECMDGOALS))
+
+.PHONY: migrate-force
+migrate-force:
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) force $(version)
+.PHONY: migrate-version
+migrate-version:
+	@migrate -path=$(MIGRATIONS_PATH) -database=$(DB_ADDR) version
+
+.PHONY: db-reset
+db-reset:
+	@echo "Dropping and recreating database..."
+	@dropdb --if-exists social
+	@createdb social
+	@make migrate-up
