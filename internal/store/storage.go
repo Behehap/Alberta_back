@@ -6,26 +6,50 @@ import (
 	"errors"
 )
 
+// Global errors
 var (
-	ErrorNotFound = errors.New("resource not found")
+	ErrorNotFound       = errors.New("resource not found")
+	ErrorDuplicateEmail = errors.New("duplicate email")
 )
 
+// Storage is the main struct that holds all our data access types (interfaces).
 type Storage struct {
-	Posts interface {
-		GetByID(context.Context, int64) (*Post, error)
-		Create(context.Context, *Post) error
-		Delete(context.Context, int64) error
-		Update(context.Context, *Post) error
-	}
+	Students StudentStore
+	Grades   GradeStore
+	Majors   MajorStore
+	Books    BookStore
+	// ... and so on for every interface
+}
 
-	Users interface {
-		Create(context.Context, *User) error
+// NewStorage creates a new Storage instance with all the data stores initialized.
+func NewStorage(db *sql.DB) *Storage {
+	return &Storage{
+		Students: &StudentModel{DB: db},
+		Grades:   &GradeModel{DB: db},
+		Majors:   &MajorModel{DB: db},
+		// ... and so on
 	}
 }
 
-func NewStorage(db *sql.DB) Storage {
-	return Storage{
-		Posts: &PostsStore{db},
-		Users: &UserStore{db},
-	}
+// --- DATA STORE INTERFACES ---
+
+type StudentStore interface {
+	Insert(ctx context.Context, student *Student) error
+	Get(ctx context.Context, id int64) (*Student, error)
+	Update(ctx context.Context, student *Student) error
+	Delete(ctx context.Context, id int64) error
 }
+
+type GradeStore interface {
+	Get(ctx context.Context, id int64) (*Grade, error)
+}
+
+type MajorStore interface {
+	Get(ctx context.Context, id int64) (*Major, error)
+}
+
+type BookStore interface {
+	Get(ctx context.Context, id int64) (*Book, error)
+}
+
+// ... continue defining an interface for every model ...
