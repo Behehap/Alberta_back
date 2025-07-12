@@ -1,75 +1,69 @@
+// cmd/api/api.go
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	// Make sure this module path matches your go.mod file
 
 	"github.com/Behehap/Alberta/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// config struct holds all the configuration settings for our application.
+type config struct {
+	port int
+	env  string
+	db   struct {
+		dsn          string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime  string
+	}
+}
+
+// application struct holds the dependencies for our HTTP handlers, helpers, and middleware.
 type application struct {
 	config config
-	store  store.Storage
+	logger *log.Logger
+	store  *store.Storage
 }
 
-type config struct {
-	addr string
-	db   dbConfig
-	env  string
+// run starts the HTTP server.
+func (app *application) run() error {
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", app.config.port),
+		Handler:      app.mount(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	app.logger.Printf("starting %s server on %s", app.config.env, srv.Addr)
+	return srv.ListenAndServe()
 }
 
-type dbConfig struct {
-	addr         string
-	maxOpenConns int
-	maxIdleConns int
-	maxIdleTime  string
-}
-
+// mount sets up the router and middleware.
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
-	// A good base middleware stack
+	// Base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(middleware.Logger) // Chi's logger
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Set a timeout value on the request context (ctx), that will signal
-	// through ctx.Done() that the request has timed out and further
-	// processing should be stopped.
-	// r.Use(middleware.Timeout(60 * time.Second))
-	// r.Route("/v1", func(r chi.Router) {
-	// 	r.Get("/health", app.healthCheckHandler)
+	// API routes
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/healthcheck", app.healthcheckHandler)
 
-	// 	r.Route("/posts", func(r chi.Router) {
-	// 		r.Post("/", app.createPostHandler)
-
-	// 		r.Route("/{postID}", func(r chi.Router) {
-	// 			r.Use(app.postContextMiddleware)
-	// 			r.Get("/", app.getPostHandler)
-	// 			r.Delete("/", app.deletePostHandler)
-	// 			r.Patch("/", app.updatePostHandler)
-	// 		})
-	// 	})
-	// })
+		// We will add student routes, schedule routes, etc. here later.
+	})
 
 	return r
-}
-
-func (app *application) run(mux http.Handler) error {
-
-	srv := &http.Server{
-		Addr:         app.config.addr,
-		Handler:      mux,
-		WriteTimeout: time.Second * 30,
-		ReadTimeout:  time.Second * 10,
-		IdleTimeout:  time.Minute,
-	}
-
-	log.Printf("server has started at %s", app.config.addr)
-
-	return srv.ListenAndServe()
 }
