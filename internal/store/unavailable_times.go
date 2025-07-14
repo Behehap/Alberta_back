@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-// UnavailableTime represents a single recurring block of time when a student is not available.
+// UnavailableTime is a block of time when a student is busy.
 type UnavailableTime struct {
 	ID          int64  `json:"id"`
 	StudentID   int64  `json:"student_id"`
 	Title       string `json:"title,omitempty"`
-	DayOfWeek   int    `json:"day_of_week"` // e.g., time.Monday = 1
-	StartTime   string `json:"start_time"`  // Stored as "HH:MM:SS"
-	EndTime     string `json:"end_time"`    // Stored as "HH:MM:SS"
+	DayOfWeek   int    `json:"day_of_week"` // Using Go's time.Weekday: Sunday=0, Monday=1, etc.
+	StartTime   string `json:"start_time"`  // Storing as "HH:MM:SS".
+	EndTime     string `json:"end_time"`
 	IsRecurring bool   `json:"is_recurring"`
 }
 
@@ -23,7 +23,7 @@ type UnavailableTimeModel struct {
 	DB *sql.DB
 }
 
-// Insert adds a new unavailable time slot for a student.
+// Insert adds a new unavailable time for a student.
 func (m *UnavailableTimeModel) Insert(ctx context.Context, ut *UnavailableTime) error {
 	query := `
         INSERT INTO unavailable_times (student_id, title, day_of_week, start_time, end_time, is_recurring)
@@ -38,7 +38,7 @@ func (m *UnavailableTimeModel) Insert(ctx context.Context, ut *UnavailableTime) 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ut.ID)
 }
 
-// GetAllForStudent retrieves all unavailable time slots for a specific student.
+// GetAllForStudent gets all unavailable time slots for a specific student.
 func (m *UnavailableTimeModel) GetAllForStudent(ctx context.Context, studentID int64) ([]*UnavailableTime, error) {
 	query := `
         SELECT id, student_id, title, day_of_week, start_time, end_time, is_recurring

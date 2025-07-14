@@ -2,13 +2,13 @@
 package main
 
 import (
-	// We need to import context now
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/Behehap/Alberta/internal/store"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -52,33 +52,46 @@ func (app *application) run() error {
 	return srv.ListenAndServe()
 }
 
-// mount sets up the router and middleware.
+// mount sets up the router and all the API routes.
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
 	// Base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger) // Chi's logger
+	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// API routes
+	// All API routes will be under the /v1 prefix
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/healthcheck", app.healthcheckHandler)
 
-		// Student routes
+		// Routes for listing seeded data like grades, majors, and books.
+		r.Get("/grades", app.listGradesHandler)
+		r.Get("/majors", app.listMajorsHandler)
+		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
+
+		// Routes for managing students.
 		r.Post("/students", app.createStudentHandler)
 
-		// This is a route group for a single student.
-		// Any routes inside here will have the /v1/students/{studentID} prefix.
+		// This group handles all routes related to a specific student.
 		r.Route("/students/{studentID}", func(r chi.Router) {
-			// Use our middleware to fetch the student and put it in the context.
+			// This middleware fetches the student for all routes in this group.
 			r.Use(app.studentContextMiddleware)
+
+			// Endpoints for the student resource itself.
 			r.Get("/", app.getStudentHandler)
-			// Adding the update and delete routes.
 			r.Patch("/", app.updateStudentHandler)
 			r.Delete("/", app.deleteStudentHandler)
+
+			// Endpoints for a student's unavailable times.
+			r.Get("/unavailable-times", app.listUnavailableTimesHandler)
+			r.Post("/unavailable-times", app.createUnavailableTimeHandler)
+
+			// Endpoints for a student's weekly plans.
+			r.Get("/weekly-plans", app.listWeeklyPlansHandler)
+			r.Post("/weekly-plans", app.createWeeklyPlanHandler)
 		})
 	})
 
