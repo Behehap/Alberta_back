@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
 )
 
 var (
@@ -23,6 +22,7 @@ type Storage struct {
 	SubjectFrequencies SubjectFrequencyStore
 	DailyPlans         DailyPlanStore
 	StudySessions      StudySessionStore
+	SessionReports     SessionReportStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -36,6 +36,7 @@ func NewStorage(db *sql.DB) *Storage {
 		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
 		DailyPlans:         &DailyPlanModel{DB: db},
 		StudySessions:      &StudySessionModel{DB: db},
+		SessionReports:     &SessionReportModel{DB: db},
 	}
 }
 
@@ -82,7 +83,6 @@ type SubjectFrequencyStore interface {
 type DailyPlanStore interface {
 	Insert(ctx context.Context, dp *DailyPlan) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
-	GetByDate(ctx context.Context, weeklyPlanID int64, planDate time.Time) (*DailyPlan, error)
 	Get(ctx context.Context, id int64) (*DailyPlan, error)
 }
 
@@ -92,4 +92,9 @@ type StudySessionStore interface {
 	Get(ctx context.Context, id int64) (*StudySession, error)
 	Update(ctx context.Context, ss *StudySession) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type SessionReportStore interface {
+	Insert(ctx context.Context, sr *SessionReport) error
+	GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error)
 }

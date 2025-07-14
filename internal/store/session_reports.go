@@ -1,4 +1,3 @@
-// internal/store/session_reports.go
 package store
 
 import (
@@ -8,31 +7,28 @@ import (
 	"time"
 )
 
-// SessionReport contains the details of a completed study session.
 type SessionReport struct {
-	ID            int64   `json:"id"`
-	StudyBlockID  int64   `json:"study_block_id"`
-	IsCompleted   bool    `json:"is_completed"`
-	IsReview      bool    `json:"is_review"`
-	NumTests      int     `json:"num_tests,omitempty"`
-	NumWrongTests int     `json:"num_wrong_tests,omitempty"`
-	SessionScore  float64 `json:"session_score,omitempty"`
-	Notes         string  `json:"notes,omitempty"`
+	ID             int64   `json:"id"`
+	StudySessionID int64   `json:"study_session_id"`
+	IsCompleted    bool    `json:"is_completed"`
+	IsReview       bool    `json:"is_review"`
+	NumTests       int     `json:"num_tests,omitempty"`
+	NumWrongTests  int     `json:"num_wrong_tests,omitempty"`
+	SessionScore   float64 `json:"session_score,omitempty"`
+	Notes          string  `json:"notes,omitempty"`
 }
 
-// SessionReportModel holds the database connection.
 type SessionReportModel struct {
 	DB *sql.DB
 }
 
-// Insert creates a new session report for a specific study block.
 func (m *SessionReportModel) Insert(ctx context.Context, sr *SessionReport) error {
 	query := `
-        INSERT INTO session_reports (study_block_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes)
+        INSERT INTO session_reports (study_session_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id`
 
-	args := []any{sr.StudyBlockID, sr.IsCompleted, sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes}
+	args := []any{sr.StudySessionID, sr.IsCompleted, sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -40,25 +36,23 @@ func (m *SessionReportModel) Insert(ctx context.Context, sr *SessionReport) erro
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&sr.ID)
 }
 
-// GetForStudyBlock retrieves the report for a specific study block.
-// Since there's a one-to-one relationship, we expect at most one report.
-func (m *SessionReportModel) GetForStudyBlock(ctx context.Context, studyBlockID int64) (*SessionReport, error) {
-	if studyBlockID < 1 {
+func (m *SessionReportModel) GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error) {
+	if studySessionID < 1 {
 		return nil, ErrorNotFound
 	}
 
 	query := `
-        SELECT id, study_block_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes
+        SELECT id, study_session_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes
         FROM session_reports
-        WHERE study_block_id = $1`
+        WHERE study_session_id = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	var sr SessionReport
-	err := m.DB.QueryRowContext(ctx, query, studyBlockID).Scan(
+	err := m.DB.QueryRowContext(ctx, query, studySessionID).Scan(
 		&sr.ID,
-		&sr.StudyBlockID,
+		&sr.StudySessionID,
 		&sr.IsCompleted,
 		&sr.IsReview,
 		&sr.NumTests,
@@ -77,7 +71,6 @@ func (m *SessionReportModel) GetForStudyBlock(ctx context.Context, studyBlockID 
 	return &sr, nil
 }
 
-// Update modifies an existing session report.
 func (m *SessionReportModel) Update(ctx context.Context, sr *SessionReport) error {
 	query := `
         UPDATE session_reports
@@ -106,7 +99,6 @@ func (m *SessionReportModel) Update(ctx context.Context, sr *SessionReport) erro
 	return nil
 }
 
-// Delete removes a session report.
 func (m *SessionReportModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound
