@@ -28,7 +28,6 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 	})
 }
 
-// This new middleware fetches a weekly plan by its ID.
 func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		planID, err := strconv.ParseInt(chi.URLParam(r, "planID"), 10, 64)
@@ -44,6 +43,27 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 		}
 
 		ctx := context.WithValue(r.Context(), weeklyPlanContextKey, plan)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// This middleware now correctly fetches a daily plan by its ID.
+func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		dailyPlanID, err := strconv.ParseInt(chi.URLParam(r, "dailyPlanID"), 10, 64)
+		if err != nil || dailyPlanID < 1 {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		// Use the new Get method to fetch the daily plan by its ID.
+		dailyPlan, err := app.store.DailyPlans.Get(r.Context(), dailyPlanID)
+		if err != nil {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), dailyPlanContextKey, dailyPlan)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -17,6 +17,7 @@ type contextKey string
 
 const studentContextKey = contextKey("student")
 const weeklyPlanContextKey = contextKey("weekly_plan")
+const dailyPlanContextKey = contextKey("daily_plan") // New key
 
 type config struct {
 	port int
@@ -85,6 +86,13 @@ func (app *application) mount() http.Handler {
 
 				r.Get("/daily-plans", app.listDailyPlansHandler)
 				r.Post("/daily-plans", app.createDailyPlanHandler)
+
+				r.Route("/daily-plans/{dailyPlanID}", func(r chi.Router) {
+					r.Use(app.dailyPlanContextMiddleware)
+
+					r.Get("/study-sessions", app.listStudySessionsHandler)
+					r.Post("/study-sessions", app.createStudySessionHandler)
+				})
 			})
 		})
 	})

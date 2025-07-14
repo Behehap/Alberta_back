@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 var (
@@ -20,7 +21,8 @@ type Storage struct {
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
 	SubjectFrequencies SubjectFrequencyStore
-	DailyPlans         DailyPlanStore // New
+	DailyPlans         DailyPlanStore
+	StudySessions      StudySessionStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -32,7 +34,8 @@ func NewStorage(db *sql.DB) *Storage {
 		UnavailableTimes:   &UnavailableTimeModel{DB: db},
 		WeeklyPlans:        &WeeklyPlanModel{DB: db},
 		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
-		DailyPlans:         &DailyPlanModel{DB: db}, // New
+		DailyPlans:         &DailyPlanModel{DB: db},
+		StudySessions:      &StudySessionModel{DB: db},
 	}
 }
 
@@ -79,9 +82,14 @@ type SubjectFrequencyStore interface {
 type DailyPlanStore interface {
 	Insert(ctx context.Context, dp *DailyPlan) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
+	GetByDate(ctx context.Context, weeklyPlanID int64, planDate time.Time) (*DailyPlan, error)
+	Get(ctx context.Context, id int64) (*DailyPlan, error)
 }
 
 type StudySessionStore interface {
 	Insert(ctx context.Context, ss *StudySession) error
 	GetAllForDailyPlan(ctx context.Context, dailyPlanID int64) ([]*StudySession, error)
+	Get(ctx context.Context, id int64) (*StudySession, error)
+	Update(ctx context.Context, ss *StudySession) error
+	Delete(ctx context.Context, id int64) error
 }
