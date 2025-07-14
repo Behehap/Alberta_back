@@ -80,3 +80,8 @@ type DailyPlanStore interface {
 	Insert(ctx context.Context, dp *DailyPlan) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
 }
+
+type StudySessionStore interface {
+	Insert(ctx context.Context, ss *StudySession) error
+	GetAllForDailyPlan(ctx context.Context, dailyPlanID int64) ([]*StudySession, error)
+}
