@@ -1,3 +1,4 @@
+// internal/store/store.go
 package store
 
 import (
@@ -13,6 +14,7 @@ var (
 )
 
 // Storage is the main struct that holds all our data access types (interfaces).
+
 type Storage struct {
 	Students StudentStore
 	Grades   GradeStore
@@ -42,14 +44,19 @@ type StudentStore interface {
 
 type GradeStore interface {
 	Get(ctx context.Context, id int64) (*Grade, error)
+
+	GetAll(ctx context.Context) ([]*Grade, error)
 }
 
 type MajorStore interface {
 	Get(ctx context.Context, id int64) (*Major, error)
+
+	GetAll(ctx context.Context) ([]*Major, error)
 }
 
 type BookStore interface {
 	Get(ctx context.Context, id int64) (*Book, error)
+	GetAllForCurriculum(ctx context.Context, gradeID, majorID int64) ([]*Book, error)
 }
 
 // ... continue defining an interface for every model ...
