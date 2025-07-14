@@ -19,7 +19,8 @@ type Storage struct {
 	Books              BookStore
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
-	SubjectFrequencies SubjectFrequencyStore // New
+	SubjectFrequencies SubjectFrequencyStore
+	DailyPlans         DailyPlanStore // New
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -30,7 +31,8 @@ func NewStorage(db *sql.DB) *Storage {
 		Books:              &BookModel{DB: db},
 		UnavailableTimes:   &UnavailableTimeModel{DB: db},
 		WeeklyPlans:        &WeeklyPlanModel{DB: db},
-		SubjectFrequencies: &SubjectFrequencyModel{DB: db}, // New
+		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
+		DailyPlans:         &DailyPlanModel{DB: db}, // New
 	}
 }
 
@@ -72,4 +74,9 @@ type WeeklyPlanStore interface {
 type SubjectFrequencyStore interface {
 	Insert(ctx context.Context, sf *SubjectFrequency) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
+}
+
+type DailyPlanStore interface {
+	Insert(ctx context.Context, dp *DailyPlan) error
+	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
 }
