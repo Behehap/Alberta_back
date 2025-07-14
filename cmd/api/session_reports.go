@@ -1,18 +1,18 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Behehap/Alberta/internal/store"
 )
 
-// This will need a studySessionContextMiddleware to work correctly.
 func (app *application) createSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	// studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
-	// if !ok {
-	// 	app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
-	// 	return
-	// }
+	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
+	if !ok {
+		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
+		return
+	}
 
 	var input struct {
 		IsCompleted   bool    `json:"is_completed"`
@@ -36,13 +36,13 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 	}
 
 	sr := &store.SessionReport{
-		// StudySessionID: studySession.ID,
-		IsCompleted:   input.IsCompleted,
-		IsReview:      input.IsReview,
-		NumTests:      input.NumTests,
-		NumWrongTests: input.NumWrongTests,
-		SessionScore:  input.SessionScore,
-		Notes:         input.Notes,
+		StudySessionID: studySession.ID,
+		IsCompleted:    input.IsCompleted,
+		IsReview:       input.IsReview,
+		NumTests:       input.NumTests,
+		NumWrongTests:  input.NumWrongTests,
+		SessionScore:   input.SessionScore,
+		Notes:          input.Notes,
 	}
 
 	err = app.store.SessionReports.Insert(r.Context(), sr)
@@ -58,24 +58,24 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 }
 
 func (app *application) getSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	// studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
-	// if !ok {
-	// 	app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
-	// 	return
-	// }
+	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
+	if !ok {
+		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
+		return
+	}
 
-	// report, err := app.store.SessionReports.GetForStudySession(r.Context(), studySession.ID)
-	// if err != nil {
-	// 	if errors.Is(err, store.ErrorNotFound) {
-	// 		app.notFoundResponse(w, r)
-	// 		return
-	// 	}
-	// 	app.serverErrorResponse(w, r, err)
-	// 	return
-	// }
+	report, err := app.store.SessionReports.GetForStudySession(r.Context(), studySession.ID)
+	if err != nil {
+		if errors.Is(err, store.ErrorNotFound) {
+			app.notFoundResponse(w, r)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 
-	// err = app.writeJSON(w, http.StatusOK, envelope{"session_report": report}, nil)
-	// if err != nil {
-	// 	app.serverErrorResponse(w, r, err)
-	// }
+	err = app.writeJSON(w, http.StatusOK, envelope{"session_report": report}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }

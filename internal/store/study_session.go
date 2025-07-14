@@ -1,4 +1,3 @@
-// internal/store/study_sessions.go
 package store
 
 import (
@@ -8,21 +7,18 @@ import (
 	"time"
 )
 
-// StudySession represents a single, scheduled block of time for a specific lesson.
 type StudySession struct {
 	ID          int64  `json:"id"`
 	DailyPlanID int64  `json:"daily_plan_id"`
 	LessonID    int64  `json:"lesson_id"`
-	StartTime   string `json:"start_time"` // Stored as "HH:MM:SS"
-	EndTime     string `json:"end_time"`   // Stored as "HH:MM:SS"
+	StartTime   string `json:"start_time"`
+	EndTime     string `json:"end_time"`
 }
 
-// StudySessionModel holds the database connection.
 type StudySessionModel struct {
 	DB *sql.DB
 }
 
-// Insert creates a new study session within a daily plan.
 func (m *StudySessionModel) Insert(ctx context.Context, ss *StudySession) error {
 	query := `
         INSERT INTO study_sessions (daily_plan_id, lesson_id, start_time, end_time)
@@ -37,7 +33,6 @@ func (m *StudySessionModel) Insert(ctx context.Context, ss *StudySession) error 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ss.ID)
 }
 
-// GetAllForDailyPlan retrieves all study sessions for a specific daily plan.
 func (m *StudySessionModel) GetAllForDailyPlan(ctx context.Context, dailyPlanID int64) ([]*StudySession, error) {
 	query := `
         SELECT id, daily_plan_id, lesson_id, start_time, end_time
@@ -77,7 +72,6 @@ func (m *StudySessionModel) GetAllForDailyPlan(ctx context.Context, dailyPlanID 
 	return sessions, nil
 }
 
-// Get retrieves a single study session by its ID.
 func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, error) {
 	if id < 1 {
 		return nil, ErrorNotFound
@@ -110,7 +104,6 @@ func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, e
 	return &ss, nil
 }
 
-// Update modifies an existing study session.
 func (m *StudySessionModel) Update(ctx context.Context, ss *StudySession) error {
 	query := `
         UPDATE study_sessions
@@ -139,7 +132,6 @@ func (m *StudySessionModel) Update(ctx context.Context, ss *StudySession) error 
 	return nil
 }
 
-// Delete removes a study session from a daily plan.
 func (m *StudySessionModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound

@@ -1,4 +1,3 @@
-// internal/store/exam_scope_items.go
 package store
 
 import (
@@ -7,7 +6,6 @@ import (
 	"time"
 )
 
-// ExamScopeItem defines a specific lesson that is part of an exam's scope.
 type ExamScopeItem struct {
 	ID            int64  `json:"id"`
 	ExamID        int64  `json:"exam_id"`
@@ -15,12 +13,10 @@ type ExamScopeItem struct {
 	TitleOverride string `json:"title_override,omitempty"`
 }
 
-// ExamScopeItemModel holds the database connection.
 type ExamScopeItemModel struct {
 	DB *sql.DB
 }
 
-// Insert adds a new lesson to an exam's scope.
 func (m *ExamScopeItemModel) Insert(ctx context.Context, esi *ExamScopeItem) error {
 	query := `
         INSERT INTO exam_scope_items (exam_id, lesson_id, title_override)
@@ -35,7 +31,6 @@ func (m *ExamScopeItemModel) Insert(ctx context.Context, esi *ExamScopeItem) err
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&esi.ID)
 }
 
-// GetAllForExam retrieves all scope items for a specific exam.
 func (m *ExamScopeItemModel) GetAllForExam(ctx context.Context, examID int64) ([]*ExamScopeItem, error) {
 	if examID < 1 {
 		return nil, ErrorNotFound
@@ -77,7 +72,6 @@ func (m *ExamScopeItemModel) GetAllForExam(ctx context.Context, examID int64) ([
 	return items, nil
 }
 
-// Delete removes a lesson from an exam's scope.
 func (m *ExamScopeItemModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound

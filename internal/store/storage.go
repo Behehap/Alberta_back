@@ -23,6 +23,8 @@ type Storage struct {
 	DailyPlans         DailyPlanStore
 	StudySessions      StudySessionStore
 	SessionReports     SessionReportStore
+	ExamSchedules      ExamScheduleStore
+	ExamScopeItems     ExamScopeItemStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -37,6 +39,8 @@ func NewStorage(db *sql.DB) *Storage {
 		DailyPlans:         &DailyPlanModel{DB: db},
 		StudySessions:      &StudySessionModel{DB: db},
 		SessionReports:     &SessionReportModel{DB: db},
+		ExamSchedules:      &ExamScheduleModel{DB: db},
+		ExamScopeItems:     &ExamScopeItemModel{DB: db},
 	}
 }
 
@@ -97,4 +101,17 @@ type StudySessionStore interface {
 type SessionReportStore interface {
 	Insert(ctx context.Context, sr *SessionReport) error
 	GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error)
+	Update(ctx context.Context, sr *SessionReport) error
+	Delete(ctx context.Context, id int64) error
+}
+
+type ExamScheduleStore interface {
+	Insert(ctx context.Context, es *ExamSchedule) error
+	Get(ctx context.Context, id int64) (*ExamSchedule, error)
+	GetAllForStudentCurriculum(ctx context.Context, gradeID, majorID int64) ([]*ExamSchedule, error)
+}
+
+type ExamScopeItemStore interface {
+	Insert(ctx context.Context, esi *ExamScopeItem) error
+	GetAllForExam(ctx context.Context, examID int64) ([]*ExamScopeItem, error)
 }

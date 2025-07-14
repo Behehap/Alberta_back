@@ -1,4 +1,3 @@
-// internal/store/exam_schedules.go
 package store
 
 import (
@@ -8,7 +7,6 @@ import (
 	"time"
 )
 
-// ExamSchedule represents a single scheduled exam.
 type ExamSchedule struct {
 	ID            int64     `json:"id"`
 	Title         string    `json:"title"`
@@ -18,12 +16,10 @@ type ExamSchedule struct {
 	MajorID       int64     `json:"major_id"`
 }
 
-// ExamScheduleModel holds the database connection.
 type ExamScheduleModel struct {
 	DB *sql.DB
 }
 
-// Insert creates a new exam schedule.
 func (m *ExamScheduleModel) Insert(ctx context.Context, es *ExamSchedule) error {
 	query := `
         INSERT INTO exam_schedules (title, exam_date, organisation, target_grade_id, major_id)
@@ -38,7 +34,6 @@ func (m *ExamScheduleModel) Insert(ctx context.Context, es *ExamSchedule) error 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&es.ID)
 }
 
-// Get retrieves a single exam schedule by its ID.
 func (m *ExamScheduleModel) Get(ctx context.Context, id int64) (*ExamSchedule, error) {
 	if id < 1 {
 		return nil, ErrorNotFound
@@ -72,7 +67,6 @@ func (m *ExamScheduleModel) Get(ctx context.Context, id int64) (*ExamSchedule, e
 	return &es, nil
 }
 
-// GetAllForStudentCurriculum retrieves all relevant exams for a student based on their grade and major.
 func (m *ExamScheduleModel) GetAllForStudentCurriculum(ctx context.Context, gradeID, majorID int64) ([]*ExamSchedule, error) {
 	query := `
         SELECT id, title, exam_date, organisation, target_grade_id, major_id
@@ -113,7 +107,6 @@ func (m *ExamScheduleModel) GetAllForStudentCurriculum(ctx context.Context, grad
 	return exams, nil
 }
 
-// Update modifies an existing exam schedule.
 func (m *ExamScheduleModel) Update(ctx context.Context, es *ExamSchedule) error {
 	query := `
         UPDATE exam_schedules
@@ -142,7 +135,6 @@ func (m *ExamScheduleModel) Update(ctx context.Context, es *ExamSchedule) error 
 	return nil
 }
 
-// Delete removes an exam schedule.
 func (m *ExamScheduleModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound
