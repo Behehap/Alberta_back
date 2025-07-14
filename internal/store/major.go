@@ -40,3 +40,32 @@ func (m *MajorModel) Get(ctx context.Context, id int64) (*Major, error) {
 
 	return &major, nil
 }
+
+// GetAll returns a slice of all majors, ordered by their ID.
+func (m *MajorModel) GetAll(ctx context.Context) ([]*Major, error) {
+	query := `SELECT id, name FROM majors ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var majors []*Major
+	for rows.Next() {
+		var major Major
+		if err := rows.Scan(&major.ID, &major.Name); err != nil {
+			return nil, err
+		}
+		majors = append(majors, &major)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return majors, nil
+}
