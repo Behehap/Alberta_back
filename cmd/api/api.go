@@ -82,6 +82,9 @@ func (app *application) mount() http.Handler {
 
 				r.Get("/subject-frequencies", app.listSubjectFrequenciesHandler)
 				r.Post("/subject-frequencies", app.createSubjectFrequencyHandler)
+
+				r.Get("/daily-plans", app.listDailyPlansHandler)
+				r.Post("/daily-plans", app.createDailyPlanHandler)
 			})
 		})
 	})
