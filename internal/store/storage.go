@@ -12,25 +12,25 @@ var (
 	ErrorDuplicateEmail = errors.New("duplicate email")
 )
 
-// The main struct holding all the data layer interfaces.
 type Storage struct {
-	Students         StudentStore
-	Grades           GradeStore
-	Majors           MajorStore
-	Books            BookStore
-	UnavailableTimes UnavailableTimeStore // This is the new field
-	WeeklyPlans      WeeklyPlanStore
+	Students           StudentStore
+	Grades             GradeStore
+	Majors             MajorStore
+	Books              BookStore
+	UnavailableTimes   UnavailableTimeStore
+	WeeklyPlans        WeeklyPlanStore
+	SubjectFrequencies SubjectFrequencyStore // New
 }
 
-// NewStorage initializes all the concrete data models.
 func NewStorage(db *sql.DB) *Storage {
 	return &Storage{
-		Students:         &StudentModel{DB: db},
-		Grades:           &GradeModel{DB: db},
-		Majors:           &MajorModel{DB: db},
-		Books:            &BookModel{DB: db},
-		UnavailableTimes: &UnavailableTimeModel{DB: db}, // This is the new line
-		WeeklyPlans:      &WeeklyPlanModel{DB: db},
+		Students:           &StudentModel{DB: db},
+		Grades:             &GradeModel{DB: db},
+		Majors:             &MajorModel{DB: db},
+		Books:              &BookModel{DB: db},
+		UnavailableTimes:   &UnavailableTimeModel{DB: db},
+		WeeklyPlans:        &WeeklyPlanModel{DB: db},
+		SubjectFrequencies: &SubjectFrequencyModel{DB: db}, // New
 	}
 }
 
@@ -58,7 +58,6 @@ type BookStore interface {
 	GetAllForCurriculum(ctx context.Context, gradeID, majorID int64) ([]*Book, error)
 }
 
-// This is the new interface for unavailable times.
 type UnavailableTimeStore interface {
 	Insert(ctx context.Context, ut *UnavailableTime) error
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*UnavailableTime, error)
@@ -68,4 +67,9 @@ type WeeklyPlanStore interface {
 	Insert(ctx context.Context, wp *WeeklyPlan) error
 	Get(ctx context.Context, id int64) (*WeeklyPlan, error)
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*WeeklyPlan, error)
+}
+
+type SubjectFrequencyStore interface {
+	Insert(ctx context.Context, sf *SubjectFrequency) error
+	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
 }
