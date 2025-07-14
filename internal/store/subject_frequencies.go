@@ -1,4 +1,3 @@
-// internal/store/subject_frequencies.go
 package store
 
 import (
@@ -7,7 +6,6 @@ import (
 	"time"
 )
 
-// SubjectFrequency defines how many times a student plans to study a specific book in a given week.
 type SubjectFrequency struct {
 	ID               int64 `json:"id"`
 	WeeklyPlanID     int64 `json:"weekly_plan_id"`
@@ -15,12 +13,10 @@ type SubjectFrequency struct {
 	FrequencyPerWeek int   `json:"frequency_per_week"`
 }
 
-// SubjectFrequencyModel holds the database connection.
 type SubjectFrequencyModel struct {
 	DB *sql.DB
 }
 
-// Insert adds a new subject frequency record to a weekly plan.
 func (m *SubjectFrequencyModel) Insert(ctx context.Context, sf *SubjectFrequency) error {
 	query := `
         INSERT INTO subject_frequencies (weekly_plan_id, book_id, frequency_per_week)
@@ -35,7 +31,6 @@ func (m *SubjectFrequencyModel) Insert(ctx context.Context, sf *SubjectFrequency
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&sf.ID)
 }
 
-// GetAllForWeeklyPlan retrieves all subject frequencies for a specific weekly plan.
 func (m *SubjectFrequencyModel) GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error) {
 	query := `
         SELECT id, weekly_plan_id, book_id, frequency_per_week
@@ -73,7 +68,6 @@ func (m *SubjectFrequencyModel) GetAllForWeeklyPlan(ctx context.Context, weeklyP
 	return frequencies, nil
 }
 
-// Update modifies an existing subject frequency record.
 func (m *SubjectFrequencyModel) Update(ctx context.Context, sf *SubjectFrequency) error {
 	query := `
         UPDATE subject_frequencies
@@ -102,7 +96,6 @@ func (m *SubjectFrequencyModel) Update(ctx context.Context, sf *SubjectFrequency
 	return nil
 }
 
-// Delete removes a subject frequency record.
 func (m *SubjectFrequencyModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound
