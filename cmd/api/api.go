@@ -70,7 +70,7 @@ func (app *application) mount() http.Handler {
 		r.Post("/exam-schedules", app.createExamScheduleHandler)
 		r.Route("/exam-schedules/{examID}", func(r chi.Router) {
 			r.Use(app.examScheduleContextMiddleware)
-			r.Get("/", app.getExamScheduleHandler) // This line is now active.
+			r.Get("/", app.getExamScheduleHandler)
 			r.Get("/scope", app.listExamScopeItemsHandler)
 			r.Post("/scope", app.createExamScopeItemHandler)
 		})

@@ -13,6 +13,7 @@ var (
 )
 
 type Storage struct {
+	DB                 *sql.DB // New field to hold the connection pool
 	Students           StudentStore
 	Grades             GradeStore
 	Majors             MajorStore
@@ -31,6 +32,7 @@ type Storage struct {
 
 func NewStorage(db *sql.DB) *Storage {
 	return &Storage{
+		DB:                 db, // Initialize the new field
 		Students:           &StudentModel{DB: db},
 		Grades:             &GradeModel{DB: db},
 		Majors:             &MajorModel{DB: db},
@@ -43,8 +45,8 @@ func NewStorage(db *sql.DB) *Storage {
 		SessionReports:     &SessionReportModel{DB: db},
 		ExamSchedules:      &ExamScheduleModel{DB: db},
 		ExamScopeItems:     &ExamScopeItemModel{DB: db},
-		ScheduleTemplates:  &ScheduleTemplateModel{DB: db}, // New
-		TemplateRules:      &TemplateRuleModel{DB: db},     // New
+		ScheduleTemplates:  &ScheduleTemplateModel{DB: db},
+		TemplateRules:      &TemplateRuleModel{DB: db},
 	}
 }
 
