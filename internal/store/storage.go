@@ -25,6 +25,8 @@ type Storage struct {
 	SessionReports     SessionReportStore
 	ExamSchedules      ExamScheduleStore
 	ExamScopeItems     ExamScopeItemStore
+	ScheduleTemplates  ScheduleTemplateStore
+	TemplateRules      TemplateRuleStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -41,6 +43,8 @@ func NewStorage(db *sql.DB) *Storage {
 		SessionReports:     &SessionReportModel{DB: db},
 		ExamSchedules:      &ExamScheduleModel{DB: db},
 		ExamScopeItems:     &ExamScopeItemModel{DB: db},
+		ScheduleTemplates:  &ScheduleTemplateModel{DB: db}, // New
+		TemplateRules:      &TemplateRuleModel{DB: db},     // New
 	}
 }
 
@@ -114,4 +118,12 @@ type ExamScheduleStore interface {
 type ExamScopeItemStore interface {
 	Insert(ctx context.Context, esi *ExamScopeItem) error
 	GetAllForExam(ctx context.Context, examID int64) ([]*ExamScopeItem, error)
+}
+
+type ScheduleTemplateStore interface {
+	Get(ctx context.Context, id int64) (*ScheduleTemplate, error)
+}
+
+type TemplateRuleStore interface {
+	GetAllForTemplate(ctx context.Context, templateID int64) ([]*TemplateRule, error)
 }
