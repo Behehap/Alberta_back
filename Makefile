@@ -1,5 +1,23 @@
 # This command now runs migrations INSIDE the docker container.
 # It uses a simpler DSN that is more reliable inside Docker.
+# Create new migration files with sequential 6-digit prefix
+.PHONY: migration-create
+migration-create:
+	@if [ -z "$(NAME)" ]; then \
+		echo "Usage: make migration-create NAME=<migration_name>"; \
+		exit 1; \
+	fi; \
+	mkdir -p cmd/migrate/migrations; \
+	next_seq=$$(ls cmd/migrate/migrations | grep -E '^[0-9]+' | cut -d '_' -f 1 | sort -n | tail -n 1 | sed 's/^0*//'); \
+	next_seq=$${next_seq:-0}; \
+	next_seq=$$((next_seq + 1)); \
+	next_seq=$$(printf "%06d" $$next_seq); \
+	touch "cmd/migrate/migrations/$${next_seq}_$(NAME).up.sql"; \
+	touch "cmd/migrate/migrations/$${next_seq}_$(NAME).down.sql"; \
+	echo "Created cmd/migrate/migrations/$${next_seq}_$(NAME).up.sql"; \
+	echo "Created cmd/migrate/migrations/$${next_seq}_$(NAME).down.sql";
+
+
 .PHONY: migrate-up
 migrate-up:
 	@echo "Running migrations up..."
@@ -26,7 +44,7 @@ db-reset:
 	@echo "Starting fresh database..."
 	@docker-compose up -d
 	@echo "Waiting for database to be ready..."
-	@timeout /t 5 >nul
+	@sleep 5 # Changed from timeout /t 5 >nul to 'sleep 5' for cross-platform compatibility
 	@echo "Running all migrations..."
 	@make migrate-up
 	@echo "Database reset and migrated successfully."
@@ -34,4 +52,3 @@ db-reset:
 # This is the only command you need to run from now on to start fresh.
 .PHONY: db-seed-fresh
 db-seed-fresh: db-reset seed
-
