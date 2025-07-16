@@ -194,3 +194,13 @@ INSERT INTO template_rules (template_id, book_id, default_frequency, scheduling_
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'جامعه شناسی (دهم)'), 2, 'contiguous_pair'),
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'تاریخ (دهم)'), 2, NULL),
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'منطق (دهم)'), 2, NULL);
+
+
+-- Step 7: Seed book_roles to link books to curriculum
+INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'ادبیات فارسی (دهم)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'عربی (دهم)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'دین و زندگی (دهم)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'جامعه شناسی (دهم)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'تاریخ (دهم)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'منطق (دهم)'), 'Core' );

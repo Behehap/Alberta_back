@@ -3,9 +3,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/Behehap/Alberta/internal/store"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -30,6 +32,14 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 
 func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// First, get the student from the context.
+		// This middleware MUST run after the studentContextMiddleware.
+		student, ok := r.Context().Value(studentContextKey).(*store.Student)
+		if !ok {
+			app.serverErrorResponse(w, r, errors.New("could not retrieve student from context"))
+			return
+		}
+
 		planID, err := strconv.ParseInt(chi.URLParam(r, "planID"), 10, 64)
 		if err != nil || planID < 1 {
 			app.notFoundResponse(w, r)
@@ -38,6 +48,13 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 
 		plan, err := app.store.WeeklyPlans.Get(r.Context(), planID)
 		if err != nil {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		// *** THIS IS THE CRITICAL FIX ***
+		// Check if the plan's student ID matches the student ID from the context.
+		if plan.StudentID != student.ID {
 			app.notFoundResponse(w, r)
 			return
 		}
