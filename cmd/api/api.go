@@ -101,9 +101,12 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-		r.Patch("/study-items/{itemID}", app.updateWeeklyStudyItemHandler)
 		r.Route("/study-items/{itemID}", func(r chi.Router) {
+
 			r.Use(app.weeklyStudyItemContextMiddleware)
+
+			r.Patch("/", app.updateWeeklyStudyItemHandler)
+
 			r.Get("/report", app.getSessionReportHandler)
 			r.Post("/report", app.createSessionReportHandler)
 		})
