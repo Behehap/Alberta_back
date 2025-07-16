@@ -8,14 +8,13 @@ import (
 )
 
 type SessionReport struct {
-	ID             int64   `json:"id"`
-	StudySessionID int64   `json:"study_session_id"`
-	IsCompleted    bool    `json:"is_completed"`
-	IsReview       bool    `json:"is_review"`
-	NumTests       int     `json:"num_tests,omitempty"`
-	NumWrongTests  int     `json:"num_wrong_tests,omitempty"`
-	SessionScore   float64 `json:"session_score,omitempty"`
-	Notes          string  `json:"notes,omitempty"`
+	ID                int64   `json:"id"`
+	WeeklyStudyItemID int64   `json:"weekly_study_item_id"`
+	IsReview          bool    `json:"is_review"`
+	NumTests          int     `json:"num_tests,omitempty"`
+	NumWrongTests     int     `json:"num_wrong_tests,omitempty"`
+	SessionScore      float64 `json:"session_score,omitempty"`
+	Notes             string  `json:"notes,omitempty"`
 }
 
 type SessionReportModel struct {
@@ -24,11 +23,11 @@ type SessionReportModel struct {
 
 func (m *SessionReportModel) Insert(ctx context.Context, sr *SessionReport) error {
 	query := `
-        INSERT INTO session_reports (study_session_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO session_reports (weekly_study_item_id, is_review, num_tests, num_wrong_tests, session_score, notes)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id`
 
-	args := []any{sr.StudySessionID, sr.IsCompleted, sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes}
+	args := []any{sr.WeeklyStudyItemID, sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -36,24 +35,23 @@ func (m *SessionReportModel) Insert(ctx context.Context, sr *SessionReport) erro
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&sr.ID)
 }
 
-func (m *SessionReportModel) GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error) {
-	if studySessionID < 1 {
+func (m *SessionReportModel) GetForWeeklyStudyItem(ctx context.Context, weeklyStudyItemID int64) (*SessionReport, error) {
+	if weeklyStudyItemID < 1 {
 		return nil, ErrorNotFound
 	}
 
 	query := `
-        SELECT id, study_session_id, is_completed, is_review, num_tests, num_wrong_tests, session_score, notes
+        SELECT id, weekly_study_item_id, is_review, num_tests, num_wrong_tests, session_score, notes
         FROM session_reports
-        WHERE study_session_id = $1`
+        WHERE weekly_study_item_id = $1`
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	var sr SessionReport
-	err := m.DB.QueryRowContext(ctx, query, studySessionID).Scan(
+	err := m.DB.QueryRowContext(ctx, query, weeklyStudyItemID).Scan(
 		&sr.ID,
-		&sr.StudySessionID,
-		&sr.IsCompleted,
+		&sr.WeeklyStudyItemID,
 		&sr.IsReview,
 		&sr.NumTests,
 		&sr.NumWrongTests,
@@ -74,10 +72,10 @@ func (m *SessionReportModel) GetForStudySession(ctx context.Context, studySessio
 func (m *SessionReportModel) Update(ctx context.Context, sr *SessionReport) error {
 	query := `
         UPDATE session_reports
-        SET is_completed = $1, is_review = $2, num_tests = $3, num_wrong_tests = $4, session_score = $5, notes = $6
-        WHERE id = $7`
+        SET is_review = $1, num_tests = $2, num_wrong_tests = $3, session_score = $4, notes = $5
+        WHERE id = $6`
 
-	args := []any{sr.IsCompleted, sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes, sr.ID}
+	args := []any{sr.IsReview, sr.NumTests, sr.NumWrongTests, sr.SessionScore, sr.Notes, sr.ID}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()

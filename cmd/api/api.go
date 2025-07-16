@@ -17,8 +17,7 @@ type contextKey string
 
 const studentContextKey = contextKey("student")
 const weeklyPlanContextKey = contextKey("weekly_plan")
-const dailyPlanContextKey = contextKey("daily_plan")
-const studySessionContextKey = contextKey("study_session")
+const weeklyStudyItemContextKey = contextKey("weekly_study_item")
 const examScheduleContextKey = contextKey("exam_schedule")
 
 type config struct {
@@ -66,6 +65,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/grades", app.listGradesHandler)
 		r.Get("/majors", app.listMajorsHandler)
 		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
+		r.Get("/books/{bookID}/lessons", app.listLessonsForBookHandler)
 
 		r.Post("/exam-schedules", app.createExamScheduleHandler)
 		r.Route("/exam-schedules/{examID}", func(r chi.Router) {
@@ -96,23 +96,16 @@ func (app *application) mount() http.Handler {
 				r.Get("/subject-frequencies", app.listSubjectFrequenciesHandler)
 				r.Post("/subject-frequencies", app.createSubjectFrequencyHandler)
 
-				r.Get("/daily-plans", app.listDailyPlansHandler)
-				r.Post("/daily-plans", app.createDailyPlanHandler)
-
-				r.Route("/daily-plans/{dailyPlanID}", func(r chi.Router) {
-					r.Use(app.dailyPlanContextMiddleware)
-
-					r.Get("/study-sessions", app.listStudySessionsHandler)
-					r.Post("/study-sessions", app.createStudySessionHandler)
-
-					r.Route("/study-sessions/{sessionID}", func(r chi.Router) {
-						r.Use(app.studySessionContextMiddleware)
-
-						r.Get("/report", app.getSessionReportHandler)
-						r.Post("/report", app.createSessionReportHandler)
-					})
-				})
+				r.Get("/study-items", app.listWeeklyStudyItemsHandler)
+				r.Post("/study-items", app.addWeeklyStudyItemHandler)
 			})
+		})
+
+		r.Patch("/study-items/{itemID}", app.updateWeeklyStudyItemHandler)
+		r.Route("/study-items/{itemID}", func(r chi.Router) {
+			r.Use(app.weeklyStudyItemContextMiddleware)
+			r.Get("/report", app.getSessionReportHandler)
+			r.Post("/report", app.createSessionReportHandler)
 		})
 	})
 

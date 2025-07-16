@@ -47,45 +47,25 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 	})
 }
 
-func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handler {
+func (app *application) weeklyStudyItemContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dailyPlanID, err := strconv.ParseInt(chi.URLParam(r, "dailyPlanID"), 10, 64)
-		if err != nil || dailyPlanID < 1 {
+		itemID, err := strconv.ParseInt(chi.URLParam(r, "itemID"), 10, 64)
+		if err != nil || itemID < 1 {
 			app.notFoundResponse(w, r)
 			return
 		}
 
-		dailyPlan, err := app.store.DailyPlans.Get(r.Context(), dailyPlanID)
+		item, err := app.store.WeeklyStudyItems.Get(r.Context(), itemID)
 		if err != nil {
 			app.notFoundResponse(w, r)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), dailyPlanContextKey, dailyPlan)
+		ctx := context.WithValue(r.Context(), weeklyStudyItemContextKey, item)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (app *application) studySessionContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionID, err := strconv.ParseInt(chi.URLParam(r, "sessionID"), 10, 64)
-		if err != nil || sessionID < 1 {
-			app.notFoundResponse(w, r)
-			return
-		}
-
-		session, err := app.store.StudySessions.Get(r.Context(), sessionID)
-		if err != nil {
-			app.notFoundResponse(w, r)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), studySessionContextKey, session)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-// This new middleware fetches an exam schedule by its ID.
 func (app *application) examScheduleContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		examID, err := strconv.ParseInt(chi.URLParam(r, "examID"), 10, 64)

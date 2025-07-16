@@ -1,7 +1,7 @@
-// cmd/api/weekly_plans.go
 package main
 
 import (
+	"database/sql" // We need to import this to use sql.NullString
 	"errors"
 	"net/http"
 	"time"
@@ -34,13 +34,22 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// This is the fix. We check if the start time was provided.
+	// If not, we use a special type that will be saved as NULL in the database.
+	var dayStartTime sql.NullString
+	if input.DayStartTime != "" {
+		dayStartTime.String = input.DayStartTime + ":00"
+		dayStartTime.Valid = true
+	}
+
 	wp := &store.WeeklyPlan{
 		StudentID:                student.ID,
 		StartDateOfWeek:          startDate,
-		DayStartTime:             input.DayStartTime + ":00",
+		DayStartTime:             dayStartTime, // Use the new nullable string
 		MaxStudyTimeHoursPerWeek: input.MaxStudyTimeHoursPerWeek,
 	}
 
+	// We also need to update the data layer to handle this new type.
 	err = app.store.WeeklyPlans.Insert(r.Context(), wp)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

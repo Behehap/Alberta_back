@@ -10,11 +10,11 @@ import (
 
 // WeeklyPlan represents a student's study plan for a specific week.
 type WeeklyPlan struct {
-	ID                       int64     `json:"id"`
-	StudentID                int64     `json:"student_id"`
-	StartDateOfWeek          time.Time `json:"start_date_of_week"`
-	DayStartTime             string    `json:"day_start_time,omitempty"` // Stored as "HH:MM:SS"
-	MaxStudyTimeHoursPerWeek int       `json:"max_study_time_hours_per_week,omitempty"`
+	ID                       int64          `json:"id"`
+	StudentID                int64          `json:"student_id"`
+	StartDateOfWeek          time.Time      `json:"start_date_of_week"`
+	DayStartTime             sql.NullString `json:"day_start_time,omitempty"` // Stored as "HH:MM:SS"
+	MaxStudyTimeHoursPerWeek int            `json:"max_study_time_hours_per_week,omitempty"`
 }
 
 // WeeklyPlanModel holds the database connection.

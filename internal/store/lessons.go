@@ -1,4 +1,3 @@
-// internal/store/lessons.go
 package store
 
 import (
@@ -8,7 +7,6 @@ import (
 	"time"
 )
 
-// Lesson represents a single lesson or chapter within a book.
 type Lesson struct {
 	ID                        int64  `json:"id"`
 	Name                      string `json:"name"`
@@ -16,12 +14,10 @@ type Lesson struct {
 	EstimatedStudyTimeMinutes int    `json:"estimated_study_time_minutes,omitempty"`
 }
 
-// LessonModel holds the database connection and implements the LessonStore interface.
 type LessonModel struct {
 	DB *sql.DB
 }
 
-// Get retrieves a single lesson from the database by its ID.
 func (m *LessonModel) Get(ctx context.Context, id int64) (*Lesson, error) {
 	if id < 1 {
 		return nil, ErrorNotFound
@@ -51,4 +47,43 @@ func (m *LessonModel) Get(ctx context.Context, id int64) (*Lesson, error) {
 	}
 
 	return &lesson, nil
+}
+
+// This is the new function to get all lessons for a book.
+func (m *LessonModel) GetAllForBook(ctx context.Context, bookID int64) ([]*Lesson, error) {
+	query := `
+        SELECT id, name, book_id, estimated_study_time_minutes
+        FROM lessons
+        WHERE book_id = $1
+        ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var lessons []*Lesson
+	for rows.Next() {
+		var lesson Lesson
+		err := rows.Scan(
+			&lesson.ID,
+			&lesson.Name,
+			&lesson.BookID,
+			&lesson.EstimatedStudyTimeMinutes,
+		)
+		if err != nil {
+			return nil, err
+		}
+		lessons = append(lessons, &lesson)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return lessons, nil
 }

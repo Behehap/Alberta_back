@@ -8,14 +8,13 @@ import (
 )
 
 func (app *application) createSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
+	studyItem, ok := r.Context().Value(weeklyStudyItemContextKey).(*store.WeeklyStudyItem)
 	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
+		app.serverErrorResponse(w, r, errors.New("could not retrieve weekly study item from context"))
 		return
 	}
 
 	var input struct {
-		IsCompleted   bool    `json:"is_completed"`
 		IsReview      bool    `json:"is_review"`
 		NumTests      int     `json:"num_tests"`
 		NumWrongTests int     `json:"num_wrong_tests"`
@@ -36,13 +35,12 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 	}
 
 	sr := &store.SessionReport{
-		StudySessionID: studySession.ID,
-		IsCompleted:    input.IsCompleted,
-		IsReview:       input.IsReview,
-		NumTests:       input.NumTests,
-		NumWrongTests:  input.NumWrongTests,
-		SessionScore:   input.SessionScore,
-		Notes:          input.Notes,
+		WeeklyStudyItemID: studyItem.ID,
+		IsReview:          input.IsReview,
+		NumTests:          input.NumTests,
+		NumWrongTests:     input.NumWrongTests,
+		SessionScore:      input.SessionScore,
+		Notes:             input.Notes,
 	}
 
 	err = app.store.SessionReports.Insert(r.Context(), sr)
@@ -58,13 +56,13 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 }
 
 func (app *application) getSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
+	studyItem, ok := r.Context().Value(weeklyStudyItemContextKey).(*store.WeeklyStudyItem)
 	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
+		app.serverErrorResponse(w, r, errors.New("could not retrieve weekly study item from context"))
 		return
 	}
 
-	report, err := app.store.SessionReports.GetForStudySession(r.Context(), studySession.ID)
+	report, err := app.store.SessionReports.GetForWeeklyStudyItem(r.Context(), studyItem.ID)
 	if err != nil {
 		if errors.Is(err, store.ErrorNotFound) {
 			app.notFoundResponse(w, r)
