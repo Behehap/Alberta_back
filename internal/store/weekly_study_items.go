@@ -10,7 +10,7 @@ import (
 type WeeklyStudyItem struct {
 	ID             int64     `json:"id"`
 	WeeklyPlanID   int64     `json:"weekly_plan_id"`
-	LessonID       int64     `json:"lesson_id"`
+	BookID         int64     `json:"book_id"` // Changed from LessonID to BookID
 	IsCompleted    bool      `json:"is_completed"`
 	CompletionDate time.Time `json:"completion_date,omitempty"`
 }
@@ -21,11 +21,11 @@ type WeeklyStudyItemModel struct {
 
 func (m *WeeklyStudyItemModel) Insert(ctx context.Context, wsi *WeeklyStudyItem) error {
 	query := `
-        INSERT INTO weekly_study_items (weekly_plan_id, lesson_id)
+        INSERT INTO weekly_study_items (weekly_plan_id, book_id)
         VALUES ($1, $2)
         RETURNING id, is_completed`
 
-	args := []any{wsi.WeeklyPlanID, wsi.LessonID}
+	args := []any{wsi.WeeklyPlanID, wsi.BookID} // Changed from wsi.LessonID to wsi.BookID
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -34,7 +34,7 @@ func (m *WeeklyStudyItemModel) Insert(ctx context.Context, wsi *WeeklyStudyItem)
 
 func (m *WeeklyStudyItemModel) GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*WeeklyStudyItem, error) {
 	query := `
-        SELECT id, weekly_plan_id, lesson_id, is_completed, completion_date
+        SELECT id, weekly_plan_id, book_id, is_completed, completion_date
         FROM weekly_study_items
         WHERE weekly_plan_id = $1
         ORDER BY id`
@@ -55,7 +55,7 @@ func (m *WeeklyStudyItemModel) GetAllForWeeklyPlan(ctx context.Context, weeklyPl
 		err := rows.Scan(
 			&item.ID,
 			&item.WeeklyPlanID,
-			&item.LessonID,
+			&item.BookID, // Changed from &item.LessonID to &item.BookID
 			&item.IsCompleted,
 			&completionDate,
 		)
@@ -136,7 +136,7 @@ func (m *WeeklyStudyItemModel) Get(ctx context.Context, id int64) (*WeeklyStudyI
 		return nil, ErrorNotFound
 	}
 	query := `
-        SELECT id, weekly_plan_id, lesson_id, is_completed, completion_date
+        SELECT id, weekly_plan_id, book_id, is_completed, completion_date
         FROM weekly_study_items
         WHERE id = $1`
 
@@ -148,7 +148,7 @@ func (m *WeeklyStudyItemModel) Get(ctx context.Context, id int64) (*WeeklyStudyI
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&item.ID,
 		&item.WeeklyPlanID,
-		&item.LessonID,
+		&item.BookID,
 		&item.IsCompleted,
 		&completionDate,
 	)

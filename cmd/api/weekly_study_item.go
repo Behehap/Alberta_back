@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/Behehap/Alberta/internal/store"
+	"github.com/go-chi/chi/v5"
 )
 
 func (app *application) addWeeklyStudyItemHandler(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +17,7 @@ func (app *application) addWeeklyStudyItemHandler(w http.ResponseWriter, r *http
 	}
 
 	var input struct {
-		LessonID int64 `json:"lesson_id" validate:"required,gt=0"`
+		BookID int64 `json:"book_id" validate:"required,gt=0"` // Changed from LessonID to BookID
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -32,7 +34,7 @@ func (app *application) addWeeklyStudyItemHandler(w http.ResponseWriter, r *http
 
 	wsi := &store.WeeklyStudyItem{
 		WeeklyPlanID: weeklyPlan.ID,
-		LessonID:     input.LessonID,
+		BookID:       input.BookID,
 	}
 
 	err = app.store.WeeklyStudyItems.Insert(r.Context(), wsi)
@@ -67,10 +69,15 @@ func (app *application) listWeeklyStudyItemsHandler(w http.ResponseWriter, r *ht
 }
 
 func (app *application) updateWeeklyStudyItemHandler(w http.ResponseWriter, r *http.Request) {
+	itemID, err := strconv.ParseInt(chi.URLParam(r, "itemID"), 10, 64)
+	if err != nil || itemID < 1 {
+		app.notFoundResponse(w, r)
+		return
+	}
 
-	item, ok := r.Context().Value(weeklyStudyItemContextKey).(*store.WeeklyStudyItem)
-	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve weekly study item from context"))
+	item, err := app.store.WeeklyStudyItems.Get(r.Context(), itemID)
+	if err != nil {
+		app.notFoundResponse(w, r)
 		return
 	}
 
@@ -78,7 +85,7 @@ func (app *application) updateWeeklyStudyItemHandler(w http.ResponseWriter, r *h
 		IsCompleted *bool `json:"is_completed"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err = app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -90,11 +97,6 @@ func (app *application) updateWeeklyStudyItemHandler(w http.ResponseWriter, r *h
 
 	err = app.store.WeeklyStudyItems.Update(r.Context(), item)
 	if err != nil {
-
-		if errors.Is(err, store.ErrorNotFound) {
-			app.notFoundResponse(w, r)
-			return
-		}
 		app.serverErrorResponse(w, r, err)
 		return
 	}
