@@ -44,7 +44,7 @@ db-reset:
 	@echo "Starting fresh database..."
 	@docker-compose up -d
 	@echo "Waiting for database to be ready..."
-	@sleep 5 # Changed from timeout /t 5 >nul to 'sleep 5' for cross-platform compatibility
+	@@docker-compose exec -T db sh -c "until pg_isready -U admin -d social; do echo 'Waiting...'; sleep 1; done"
 	@echo "Running all migrations..."
 	@make migrate-up
 	@echo "Database reset and migrated successfully."

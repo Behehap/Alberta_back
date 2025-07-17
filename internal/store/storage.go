@@ -121,6 +121,7 @@ type ExamScopeItemStore interface {
 
 type ScheduleTemplateStore interface {
 	Get(ctx context.Context, id int64) (*ScheduleTemplate, error)
+	GetAll(ctx context.Context, gradeID, majorID int64) ([]*ScheduleTemplate, error)
 }
 
 type TemplateRuleStore interface {

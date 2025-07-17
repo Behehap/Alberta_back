@@ -65,6 +65,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/grades", app.listGradesHandler)
 		r.Get("/majors", app.listMajorsHandler)
 		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
+
 		r.Get("/books/{bookID}/lessons", app.listLessonsForBookHandler)
 
 		r.Post("/exam-schedules", app.createExamScheduleHandler)

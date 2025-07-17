@@ -50,3 +50,42 @@ func (m *ScheduleTemplateModel) Get(ctx context.Context, id int64) (*ScheduleTem
 
 	return &tpl, nil
 }
+
+func (m *ScheduleTemplateModel) GetAll(ctx context.Context, gradeID, majorID int64) ([]*ScheduleTemplate, error) {
+	query := `
+        SELECT id, name, target_grade_id, target_major_id, total_study_blocks_per_week
+        FROM schedule_templates
+        WHERE target_grade_id = $1 AND target_major_id = $2
+        ORDER BY name` // Order by name for consistent results
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, gradeID, majorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var templates []*ScheduleTemplate
+	for rows.Next() {
+		var tpl ScheduleTemplate
+		err := rows.Scan(
+			&tpl.ID,
+			&tpl.Name,
+			&tpl.TargetGradeID,
+			&tpl.TargetMajorID,
+			&tpl.TotalStudyBlocksPerWeek,
+		)
+		if err != nil {
+			return nil, err
+		}
+		templates = append(templates, &tpl)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}

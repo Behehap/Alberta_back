@@ -34,7 +34,7 @@ func (app *application) addWeeklyStudyItemHandler(w http.ResponseWriter, r *http
 
 	wsi := &store.WeeklyStudyItem{
 		WeeklyPlanID: weeklyPlan.ID,
-		BookID:       input.BookID,
+		BookID:       input.BookID, // Changed from LessonID to BookID
 	}
 
 	err = app.store.WeeklyStudyItems.Insert(r.Context(), wsi)
