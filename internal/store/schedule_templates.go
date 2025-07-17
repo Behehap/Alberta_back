@@ -56,7 +56,7 @@ func (m *ScheduleTemplateModel) GetAll(ctx context.Context, gradeID, majorID int
         SELECT id, name, target_grade_id, target_major_id, total_study_blocks_per_week
         FROM schedule_templates
         WHERE target_grade_id = $1 AND target_major_id = $2
-        ORDER BY name` // Order by name for consistent results
+        ORDER BY name`
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
