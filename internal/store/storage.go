@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 )
 
 var (
@@ -19,6 +20,7 @@ type Storage struct {
 	Lessons            LessonStore
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
+	DailyPlans         DailyPlanStore
 	SubjectFrequencies SubjectFrequencyStore
 	StudySessions      StudySessionStore
 	SessionReports     SessionReportStore
@@ -26,7 +28,6 @@ type Storage struct {
 	ExamScopeItems     ExamScopeItemStore
 	ScheduleTemplates  ScheduleTemplateStore
 	TemplateRules      TemplateRuleStore
-	DailyPlans         DailyPlanStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -38,6 +39,7 @@ func NewStorage(db *sql.DB) *Storage {
 		Lessons:            &LessonModel{DB: db},
 		UnavailableTimes:   &UnavailableTimeModel{DB: db},
 		WeeklyPlans:        &WeeklyPlanModel{DB: db},
+		DailyPlans:         &DailyPlanModel{DB: db},
 		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
 		StudySessions:      &StudySessionModel{DB: db},
 		SessionReports:     &SessionReportModel{DB: db},
@@ -45,11 +47,8 @@ func NewStorage(db *sql.DB) *Storage {
 		ExamScopeItems:     &ExamScopeItemModel{DB: db},
 		ScheduleTemplates:  &ScheduleTemplateModel{DB: db},
 		TemplateRules:      &TemplateRuleModel{DB: db},
-		DailyPlans:         &DailyPlanModel{DB: db},
 	}
 }
-
-// --- INTERFACES ---
 
 type StudentStore interface {
 	Insert(ctx context.Context, student *Student) error
@@ -81,23 +80,31 @@ type LessonStore interface {
 type UnavailableTimeStore interface {
 	Insert(ctx context.Context, ut *UnavailableTime) error
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*UnavailableTime, error)
+	Update(ctx context.Context, ut *UnavailableTime) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type WeeklyPlanStore interface {
 	Insert(ctx context.Context, wp *WeeklyPlan) error
 	Get(ctx context.Context, id int64) (*WeeklyPlan, error)
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*WeeklyPlan, error)
+	Update(ctx context.Context, wp *WeeklyPlan) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type DailyPlanStore interface {
 	Insert(ctx context.Context, dp *DailyPlan) error
 	Get(ctx context.Context, id int64) (*DailyPlan, error)
+	GetByWeeklyPlanAndDate(ctx context.Context, weeklyPlanID int64, planDate time.Time) (*DailyPlan, error)
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type SubjectFrequencyStore interface {
 	Insert(ctx context.Context, sf *SubjectFrequency) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
+	Update(ctx context.Context, sf *SubjectFrequency) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type StudySessionStore interface {
@@ -110,7 +117,7 @@ type StudySessionStore interface {
 
 type SessionReportStore interface {
 	Insert(ctx context.Context, sr *SessionReport) error
-	GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error) // Renamed method
+	GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error)
 	Update(ctx context.Context, sr *SessionReport) error
 	Delete(ctx context.Context, id int64) error
 }
@@ -119,26 +126,19 @@ type ExamScheduleStore interface {
 	Insert(ctx context.Context, es *ExamSchedule) error
 	Get(ctx context.Context, id int64) (*ExamSchedule, error)
 	GetAllForStudentCurriculum(ctx context.Context, gradeID, majorID int64) ([]*ExamSchedule, error)
+	Update(ctx context.Context, es *ExamSchedule) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type ExamScopeItemStore interface {
 	Insert(ctx context.Context, esi *ExamScopeItem) error
 	GetAllForExam(ctx context.Context, examID int64) ([]*ExamScopeItem, error)
+	Delete(ctx context.Context, id int64) error
 }
 
 type ScheduleTemplateStore interface {
 	Get(ctx context.Context, id int64) (*ScheduleTemplate, error)
 	GetAll(ctx context.Context, gradeID, majorID int64) ([]*ScheduleTemplate, error)
-}
-
-type TemplateRuleStore interface {
-	GetAllForTemplate(ctx context.Context, templateID int64) ([]*TemplateRule, error)
-}
-
-type DailyPlanStore interface {
-	Get(ctx context.Context, id int64) (*DailyPlan, error)
-	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
-	Delete(ctx context.Context, id int64) error
 }
 
 type TemplateRuleStore interface {

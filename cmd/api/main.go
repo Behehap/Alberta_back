@@ -1,4 +1,3 @@
-// cmd/api/main.go
 package main
 
 import (
@@ -9,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Behehap/Alberta/internal/scheduler"
 	"github.com/Behehap/Alberta/internal/store"
 
 	_ "github.com/lib/pq"
@@ -16,13 +16,30 @@ import (
 
 const version = "1.0.0"
 
+type config struct {
+	port int
+	env  string
+	db   struct {
+		dsn          string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime  string
+	}
+}
+
+type application struct {
+	config    config
+	logger    *log.Logger
+	store     *store.Storage
+	scheduler *scheduler.Scheduler
+}
+
 func main() {
 	var cfg config
 
 	flag.IntVar(&cfg.port, "port", 8080, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	// This default DSN is now corrected to match your original project setup.
 	defaultDSN := "postgres://admin:adminpassword@localhost/social?sslmode=disable"
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("ALBERTA_DB_DSN"), "PostgreSQL DSN")
 	if cfg.db.dsn == "" {
@@ -45,11 +62,13 @@ func main() {
 	logger.Println("database connection pool established")
 
 	storage := store.NewStorage(db)
+	appScheduler := scheduler.NewScheduler(storage)
 
 	app := &application{
-		config: cfg,
-		logger: logger,
-		store:  storage,
+		config:    cfg,
+		logger:    logger,
+		store:     storage,
+		scheduler: appScheduler,
 	}
 
 	err = app.run()

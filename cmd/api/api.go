@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
-
-	"github.com/Behehap/Alberta/internal/store"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,23 +17,6 @@ const dailyPlanContextKey = contextKey("daily_plan")
 const studySessionContextKey = contextKey("study_session")
 const examScheduleContextKey = contextKey("exam_schedule")
 const scheduleTemplateContextKey = contextKey("schedule_template")
-
-type config struct {
-	port int
-	env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
-	}
-}
-
-type application struct {
-	config config
-	logger *log.Logger
-	store  *store.Storage
-}
 
 func (app *application) run() error {
 	srv := &http.Server{
@@ -77,7 +57,6 @@ func (app *application) mount() http.Handler {
 			r.Post("/rules", app.createTemplateRuleHandler)
 
 			r.Route("/rules/{ruleID}", func(r chi.Router) {
-				r.Get("/", app.getTemplateRuleHandler)
 				r.Patch("/", app.updateTemplateRuleHandler)
 				r.Delete("/", app.deleteTemplateRuleHandler)
 			})
@@ -108,6 +87,8 @@ func (app *application) mount() http.Handler {
 
 			r.Route("/weekly-plans/{planID}", func(r chi.Router) {
 				r.Use(app.weeklyPlanContextMiddleware)
+
+				r.Post("/generate", app.generateWeeklyScheduleHandler)
 
 				r.Get("/subject-frequencies", app.listSubjectFrequenciesHandler)
 				r.Post("/subject-frequencies", app.createSubjectFrequencyHandler)

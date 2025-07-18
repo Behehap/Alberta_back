@@ -3,9 +3,8 @@ package main
 import (
 	"errors"
 	"net/http"
-	"time"
-
 	"strconv"
+	"time"
 
 	"github.com/Behehap/Alberta/internal/store"
 	"github.com/go-chi/chi/v5"
@@ -77,7 +76,6 @@ func (app *application) listDailyPlansHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) getDailyPlanHandler(w http.ResponseWriter, r *http.Request) {
-
 	dailyPlan, ok := r.Context().Value(dailyPlanContextKey).(*store.DailyPlan)
 	if !ok {
 		app.serverErrorResponse(w, r, errors.New("could not retrieve daily plan from context"))

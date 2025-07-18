@@ -118,3 +118,27 @@ func (m *DailyPlanModel) Delete(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+func (m *DailyPlanModel) GetByWeeklyPlanAndDate(ctx context.Context, weeklyPlanID int64, planDate time.Time) (*DailyPlan, error) {
+	query := `
+        SELECT id, weekly_plan_id, plan_date
+        FROM daily_plans
+        WHERE weekly_plan_id = $1 AND plan_date = $2`
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	var dp DailyPlan
+	err := m.DB.QueryRowContext(ctx, query, weeklyPlanID, planDate).Scan(
+		&dp.ID,
+		&dp.WeeklyPlanID,
+		&dp.PlanDate,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrorNotFound
+		}
+		return nil, err
+	}
+	return &dp, nil
+}

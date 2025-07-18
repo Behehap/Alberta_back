@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -204,19 +203,6 @@ func (app *application) deleteTemplateRuleHandler(w http.ResponseWriter, r *http
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"message": "template rule successfully deleted"}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
-
-func (app *application) getTemplateRuleHandler(w http.ResponseWriter, r *http.Request) {
-	rule, ok := r.Context().Value(templateRuleContextKey).(*store.TemplateRule) // You'll need templateRuleContextKey for this
-	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve template rule from context"))
-		return
-	}
-
-	err := app.writeJSON(w, http.StatusOK, envelope{"template_rule": rule}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
