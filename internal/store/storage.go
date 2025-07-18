@@ -1,4 +1,3 @@
-// internal/store/storage.go
 package store
 
 import (
@@ -17,16 +16,18 @@ type Storage struct {
 	Grades             GradeStore
 	Majors             MajorStore
 	Books              BookStore
-	Lessons            LessonStore // New
+	Lessons            LessonStore
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
 	SubjectFrequencies SubjectFrequencyStore
-	WeeklyStudyItems   WeeklyStudyItemStore
-	SessionReports     SessionReportStore
-	ExamSchedules      ExamScheduleStore
-	ExamScopeItems     ExamScopeItemStore
-	ScheduleTemplates  ScheduleTemplateStore
-	TemplateRules      TemplateRuleStore
+
+	StudySessions     StudySessionStore
+	SessionReports    SessionReportStore
+	ExamSchedules     ExamScheduleStore
+	ExamScopeItems    ExamScopeItemStore
+	ScheduleTemplates ScheduleTemplateStore
+	TemplateRules     TemplateRuleStore
+	DailyPlans        DailyPlanStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -35,16 +36,17 @@ func NewStorage(db *sql.DB) *Storage {
 		Grades:             &GradeModel{DB: db},
 		Majors:             &MajorModel{DB: db},
 		Books:              &BookModel{DB: db},
-		Lessons:            &LessonModel{DB: db}, // New
+		Lessons:            &LessonModel{DB: db},
 		UnavailableTimes:   &UnavailableTimeModel{DB: db},
 		WeeklyPlans:        &WeeklyPlanModel{DB: db},
 		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
-		WeeklyStudyItems:   &WeeklyStudyItemModel{DB: db},
+		StudySessions:      &StudySessionModel{DB: db},
 		SessionReports:     &SessionReportModel{DB: db},
 		ExamSchedules:      &ExamScheduleModel{DB: db},
 		ExamScopeItems:     &ExamScopeItemModel{DB: db},
 		ScheduleTemplates:  &ScheduleTemplateModel{DB: db},
 		TemplateRules:      &TemplateRuleModel{DB: db},
+		DailyPlans:         &DailyPlanModel{DB: db},
 	}
 }
 
@@ -88,22 +90,28 @@ type WeeklyPlanStore interface {
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*WeeklyPlan, error)
 }
 
+type DailyPlanStore interface {
+	Insert(ctx context.Context, dp *DailyPlan) error
+	Get(ctx context.Context, id int64) (*DailyPlan, error)
+	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
+}
+
 type SubjectFrequencyStore interface {
 	Insert(ctx context.Context, sf *SubjectFrequency) error
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
 }
 
-type WeeklyStudyItemStore interface {
-	Insert(ctx context.Context, wsi *WeeklyStudyItem) error
-	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*WeeklyStudyItem, error)
-	Update(ctx context.Context, wsi *WeeklyStudyItem) error
+type StudySessionStore interface {
+	Insert(ctx context.Context, ss *StudySession) error
+	Get(ctx context.Context, id int64) (*StudySession, error)
+	GetAllForDailyPlan(ctx context.Context, dailyPlanID int64) ([]*StudySession, error)
+	Update(ctx context.Context, ss *StudySession) error
 	Delete(ctx context.Context, id int64) error
-	Get(ctx context.Context, id int64) (*WeeklyStudyItem, error)
 }
 
 type SessionReportStore interface {
 	Insert(ctx context.Context, sr *SessionReport) error
-	GetForWeeklyStudyItem(ctx context.Context, weeklyStudyItemID int64) (*SessionReport, error)
+	GetForStudySession(ctx context.Context, studySessionID int64) (*SessionReport, error) // Renamed method
 	Update(ctx context.Context, sr *SessionReport) error
 	Delete(ctx context.Context, id int64) error
 }

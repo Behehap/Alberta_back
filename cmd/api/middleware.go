@@ -1,4 +1,3 @@
-// cmd/api/middleware.go
 package main
 
 import (
@@ -32,8 +31,6 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 
 func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// First, get the student from the context.
-		// This middleware MUST run after the studentContextMiddleware.
 		student, ok := r.Context().Value(studentContextKey).(*store.Student)
 		if !ok {
 			app.serverErrorResponse(w, r, errors.New("could not retrieve student from context"))
@@ -52,8 +49,6 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 			return
 		}
 
-		// *** THIS IS THE CRITICAL FIX ***
-		// Check if the plan's student ID matches the student ID from the context.
 		if plan.StudentID != student.ID {
 			app.notFoundResponse(w, r)
 			return
@@ -64,21 +59,40 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 	})
 }
 
-func (app *application) weeklyStudyItemContextMiddleware(next http.Handler) http.Handler {
+func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		itemID, err := strconv.ParseInt(chi.URLParam(r, "itemID"), 10, 64)
-		if err != nil || itemID < 1 {
+		dailyPlanID, err := strconv.ParseInt(chi.URLParam(r, "dailyPlanID"), 10, 64)
+		if err != nil || dailyPlanID < 1 {
 			app.notFoundResponse(w, r)
 			return
 		}
 
-		item, err := app.store.WeeklyStudyItems.Get(r.Context(), itemID)
+		dailyPlan, err := app.store.DailyPlans.Get(r.Context(), dailyPlanID)
 		if err != nil {
 			app.notFoundResponse(w, r)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), weeklyStudyItemContextKey, item)
+		ctx := context.WithValue(r.Context(), dailyPlanContextKey, dailyPlan)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) studySessionContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionID, err := strconv.ParseInt(chi.URLParam(r, "sessionID"), 10, 64)
+		if err != nil || sessionID < 1 {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		session, err := app.store.StudySessions.Get(r.Context(), sessionID)
+		if err != nil {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), studySessionContextKey, session)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

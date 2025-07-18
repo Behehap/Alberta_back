@@ -1,4 +1,3 @@
-// cmd/api/api.go
 package main
 
 import (
@@ -17,7 +16,9 @@ type contextKey string
 
 const studentContextKey = contextKey("student")
 const weeklyPlanContextKey = contextKey("weekly_plan")
-const weeklyStudyItemContextKey = contextKey("weekly_study_item")
+
+const dailyPlanContextKey = contextKey("daily_plan")
+const studySessionContextKey = contextKey("study_session")
 const examScheduleContextKey = contextKey("exam_schedule")
 
 type config struct {
@@ -65,7 +66,6 @@ func (app *application) mount() http.Handler {
 		r.Get("/grades", app.listGradesHandler)
 		r.Get("/majors", app.listMajorsHandler)
 		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
-		r.Get("/curriculum/schedule-templates", app.listScheduleTemplatesHandler)
 		r.Get("/books/{bookID}/lessons", app.listLessonsForBookHandler)
 
 		r.Post("/exam-schedules", app.createExamScheduleHandler)
@@ -97,16 +97,24 @@ func (app *application) mount() http.Handler {
 				r.Get("/subject-frequencies", app.listSubjectFrequenciesHandler)
 				r.Post("/subject-frequencies", app.createSubjectFrequencyHandler)
 
-				r.Get("/study-items", app.listWeeklyStudyItemsHandler)
-				r.Post("/study-items", app.addWeeklyStudyItemHandler)
+				r.Post("/daily-plans", app.createDailyPlanHandler)
+				r.Get("/daily-plans", app.listDailyPlansHandler)
+
 			})
 		})
 
-		r.Route("/study-items/{itemID}", func(r chi.Router) {
+		r.Route("/daily-plans/{dailyPlanID}", func(r chi.Router) {
+			r.Use(app.dailyPlanContextMiddleware)
+			r.Get("/", app.getDailyPlanHandler)
+			r.Get("/study-sessions", app.listStudySessionsHandler)
+			r.Post("/study-sessions", app.createStudySessionHandler)
+		})
 
-			r.Use(app.weeklyStudyItemContextMiddleware)
-
-			r.Patch("/", app.updateWeeklyStudyItemHandler)
+		r.Route("/study-sessions/{sessionID}", func(r chi.Router) {
+			r.Use(app.studySessionContextMiddleware)
+			r.Get("/", app.getStudySessionHandler)
+			r.Patch("/", app.updateStudySessionHandler)
+			r.Delete("/", app.deleteStudySessionHandler)
 
 			r.Get("/report", app.getSessionReportHandler)
 			r.Post("/report", app.createSessionReportHandler)

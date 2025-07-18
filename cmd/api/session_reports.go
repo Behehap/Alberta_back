@@ -8,9 +8,10 @@ import (
 )
 
 func (app *application) createSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	studyItem, ok := r.Context().Value(weeklyStudyItemContextKey).(*store.WeeklyStudyItem)
+
+	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
 	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve weekly study item from context"))
+		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
 		return
 	}
 
@@ -35,12 +36,13 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 	}
 
 	sr := &store.SessionReport{
-		WeeklyStudyItemID: studyItem.ID,
-		IsReview:          input.IsReview,
-		NumTests:          input.NumTests,
-		NumWrongTests:     input.NumWrongTests,
-		SessionScore:      input.SessionScore,
-		Notes:             input.Notes,
+
+		StudySessionID: studySession.ID,
+		IsReview:       input.IsReview,
+		NumTests:       input.NumTests,
+		NumWrongTests:  input.NumWrongTests,
+		SessionScore:   input.SessionScore,
+		Notes:          input.Notes,
 	}
 
 	err = app.store.SessionReports.Insert(r.Context(), sr)
@@ -56,13 +58,14 @@ func (app *application) createSessionReportHandler(w http.ResponseWriter, r *htt
 }
 
 func (app *application) getSessionReportHandler(w http.ResponseWriter, r *http.Request) {
-	studyItem, ok := r.Context().Value(weeklyStudyItemContextKey).(*store.WeeklyStudyItem)
+
+	studySession, ok := r.Context().Value(studySessionContextKey).(*store.StudySession)
 	if !ok {
-		app.serverErrorResponse(w, r, errors.New("could not retrieve weekly study item from context"))
+		app.serverErrorResponse(w, r, errors.New("could not retrieve study session from context"))
 		return
 	}
 
-	report, err := app.store.SessionReports.GetForWeeklyStudyItem(r.Context(), studyItem.ID)
+	report, err := app.store.SessionReports.GetForStudySession(r.Context(), studySession.ID)
 	if err != nil {
 		if errors.Is(err, store.ErrorNotFound) {
 			app.notFoundResponse(w, r)
