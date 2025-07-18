@@ -16,10 +16,10 @@ type contextKey string
 
 const studentContextKey = contextKey("student")
 const weeklyPlanContextKey = contextKey("weekly_plan")
-
 const dailyPlanContextKey = contextKey("daily_plan")
 const studySessionContextKey = contextKey("study_session")
 const examScheduleContextKey = contextKey("exam_schedule")
+const scheduleTemplateContextKey = contextKey("schedule_template")
 
 type config struct {
 	port int
@@ -68,6 +68,21 @@ func (app *application) mount() http.Handler {
 		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
 		r.Get("/books/{bookID}/lessons", app.listLessonsForBookHandler)
 
+		r.Get("/curriculum/schedule-templates", app.listScheduleTemplatesHandler)
+		r.Route("/curriculum/schedule-templates/{templateID}", func(r chi.Router) {
+			r.Use(app.scheduleTemplateContextMiddleware)
+			r.Get("/", app.getScheduleTemplateHandler)
+
+			r.Get("/rules", app.listTemplateRulesHandler)
+			r.Post("/rules", app.createTemplateRuleHandler)
+
+			r.Route("/rules/{ruleID}", func(r chi.Router) {
+				r.Get("/", app.getTemplateRuleHandler)
+				r.Patch("/", app.updateTemplateRuleHandler)
+				r.Delete("/", app.deleteTemplateRuleHandler)
+			})
+		})
+
 		r.Post("/exam-schedules", app.createExamScheduleHandler)
 		r.Route("/exam-schedules/{examID}", func(r chi.Router) {
 			r.Use(app.examScheduleContextMiddleware)
@@ -99,7 +114,6 @@ func (app *application) mount() http.Handler {
 
 				r.Post("/daily-plans", app.createDailyPlanHandler)
 				r.Get("/daily-plans", app.listDailyPlansHandler)
-
 			})
 		})
 

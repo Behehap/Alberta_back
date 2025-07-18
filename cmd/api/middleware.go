@@ -115,3 +115,22 @@ func (app *application) examScheduleContextMiddleware(next http.Handler) http.Ha
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (app *application) scheduleTemplateContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		templateID, err := strconv.ParseInt(chi.URLParam(r, "templateID"), 10, 64)
+		if err != nil || templateID < 1 {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		template, err := app.store.ScheduleTemplates.Get(r.Context(), templateID)
+		if err != nil {
+			app.notFoundResponse(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), scheduleTemplateContextKey, template)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}

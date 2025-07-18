@@ -20,14 +20,13 @@ type Storage struct {
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
 	SubjectFrequencies SubjectFrequencyStore
-
-	StudySessions     StudySessionStore
-	SessionReports    SessionReportStore
-	ExamSchedules     ExamScheduleStore
-	ExamScopeItems    ExamScopeItemStore
-	ScheduleTemplates ScheduleTemplateStore
-	TemplateRules     TemplateRuleStore
-	DailyPlans        DailyPlanStore
+	StudySessions      StudySessionStore
+	SessionReports     SessionReportStore
+	ExamSchedules      ExamScheduleStore
+	ExamScopeItems     ExamScopeItemStore
+	ScheduleTemplates  ScheduleTemplateStore
+	TemplateRules      TemplateRuleStore
+	DailyPlans         DailyPlanStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
@@ -134,4 +133,18 @@ type ScheduleTemplateStore interface {
 
 type TemplateRuleStore interface {
 	GetAllForTemplate(ctx context.Context, templateID int64) ([]*TemplateRule, error)
+}
+
+type DailyPlanStore interface {
+	Get(ctx context.Context, id int64) (*DailyPlan, error)
+	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
+	Delete(ctx context.Context, id int64) error
+}
+
+type TemplateRuleStore interface {
+	Insert(ctx context.Context, tr *TemplateRule) error
+	Get(ctx context.Context, id int64) (*TemplateRule, error)
+	GetAllForTemplate(ctx context.Context, templateID int64) ([]*TemplateRule, error)
+	Update(ctx context.Context, tr *TemplateRule) error
+	Delete(ctx context.Context, id int64) error
 }
