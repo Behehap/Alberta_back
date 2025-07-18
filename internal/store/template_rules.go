@@ -7,11 +7,14 @@ import (
 )
 
 type TemplateRule struct {
-	ID               int64  `json:"id"`
-	TemplateID       int64  `json:"template_id"`
-	BookID           int64  `json:"book_id"`
-	DefaultFrequency int    `json:"default_frequency"`
-	SchedulingHints  string `json:"scheduling_hints,omitempty"`
+	ID                  int64          `json:"id"`
+	TemplateID          int64          `json:"template_id"`
+	BookID              int64          `json:"book_id"`
+	DefaultFrequency    int            `json:"default_frequency"`
+	SchedulingHints     string         `json:"scheduling_hints,omitempty"`
+	ConsecutiveSessions bool           `json:"consecutive_sessions"`
+	TimePreference      sql.NullString `json:"time_preference,omitempty"`
+	PrioritySlot        sql.NullString `json:"priority_slot,omitempty"`
 }
 
 type TemplateRuleModel struct {
@@ -24,7 +27,8 @@ func (m *TemplateRuleModel) GetAllForTemplate(ctx context.Context, templateID in
 	}
 
 	query := `
-        SELECT id, template_id, book_id, default_frequency, scheduling_hints
+        SELECT id, template_id, book_id, default_frequency, scheduling_hints,
+               consecutive_sessions, time_preference, priority_slot
         FROM template_rules
         WHERE template_id = $1`
 
@@ -46,6 +50,9 @@ func (m *TemplateRuleModel) GetAllForTemplate(ctx context.Context, templateID in
 			&rule.BookID,
 			&rule.DefaultFrequency,
 			&rule.SchedulingHints,
+			&rule.ConsecutiveSessions,
+			&rule.TimePreference,
+			&rule.PrioritySlot,
 		)
 		if err != nil {
 			return nil, err

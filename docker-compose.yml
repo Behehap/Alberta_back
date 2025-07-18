@@ -1,8 +1,8 @@
+version: "3.8"
+
 services:
   db:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: postgres:15
     container_name: postgres-db
     environment:
       POSTGRES_DB: social
@@ -12,8 +12,24 @@ services:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-
       - ./cmd/migrate/migrations:/migrations
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d social"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrator:
+    image: migrate/migrate:v4.16.2
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./cmd/migrate/migrations:/migrations
+    command: -path=/migrations
+      -database=postgres://admin:adminpassword@db:5432/social?sslmode=disable
+      up
+    restart: on-failure
 
 volumes:
   db-data:
