@@ -1,4 +1,3 @@
-// internal/store/weekly_plans.go
 package store
 
 import (
@@ -9,11 +8,11 @@ import (
 )
 
 type WeeklyPlan struct {
-	ID                       int64          `json:"id"`
-	StudentID                int64          `json:"student_id"`
-	StartDateOfWeek          time.Time      `json:"start_date_of_week"`
-	DayStartTime             sql.NullString `json:"day_start_time,omitempty"`
-	MaxStudyTimeHoursPerWeek int            `json:"max_study_time_hours_per_week,omitempty"`
+	ID                       int64        `json:"id"`
+	StudentID                int64        `json:"student_id"`
+	StartDateOfWeek          time.Time    `json:"start_date_of_week"`
+	DayStartTime             sql.NullTime `json:"day_start_time,omitempty"`
+	MaxStudyTimeHoursPerWeek int          `json:"max_study_time_hours_per_week,omitempty"`
 }
 
 type WeeklyPlanModel struct {
@@ -52,7 +51,7 @@ func (m *WeeklyPlanModel) Get(ctx context.Context, id int64) (*WeeklyPlan, error
 		&wp.ID,
 		&wp.StudentID,
 		&wp.StartDateOfWeek,
-		&wp.DayStartTime,
+		&wp.DayStartTime, // Scan directly into sql.NullTime
 		&wp.MaxStudyTimeHoursPerWeek,
 	)
 

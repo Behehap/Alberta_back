@@ -12,8 +12,16 @@ import (
 )
 
 type WeeklyCalendarResponse struct {
-	WeeklyPlan     *store.WeeklyPlan    `json:"weekly_plan"`
+	WeeklyPlan     *WeeklyPlanDisplay   `json:"weekly_plan"`
 	DailySchedules []DailyCalendarEntry `json:"daily_schedules"`
+}
+
+type WeeklyPlanDisplay struct {
+	ID                       int64     `json:"id"`
+	StudentID                int64     `json:"student_id"`
+	StartDateOfWeek          time.Time `json:"start_date_of_week"`
+	DayStartTime             string    `json:"day_start_time,omitempty"`
+	MaxStudyTimeHoursPerWeek int       `json:"max_study_time_hours_per_week,omitempty"`
 }
 
 type DailyCalendarEntry struct {
@@ -26,7 +34,7 @@ type StudySessionDetail struct {
 	DailyPlanID    int64       `json:"daily_plan_id"`
 	Book           *store.Book `json:"book"`
 	IsCompleted    bool        `json:"is_completed"`
-	CompletionDate *time.Time  `json:"completion_date,omitempty"` // Changed to pointer
+	CompletionDate *time.Time  `json:"completion_date,omitempty"`
 	StartTime      string      `json:"start_time"`
 	EndTime        string      `json:"end_time"`
 }
@@ -42,10 +50,23 @@ func mapStudySessionToDetail(ss *store.StudySession, book *store.Book) StudySess
 		DailyPlanID:    ss.DailyPlanID,
 		Book:           book,
 		IsCompleted:    ss.IsCompleted,
-		CompletionDate: completionDate, // Assign pointer
+		CompletionDate: completionDate,
 		StartTime:      ss.StartTime,
 		EndTime:        ss.EndTime,
 	}
+}
+
+func mapWeeklyPlanToDisplay(wp *store.WeeklyPlan) *WeeklyPlanDisplay {
+	displayWp := &WeeklyPlanDisplay{
+		ID:                       wp.ID,
+		StudentID:                wp.StudentID,
+		StartDateOfWeek:          wp.StartDateOfWeek,
+		MaxStudyTimeHoursPerWeek: wp.MaxStudyTimeHoursPerWeek,
+	}
+	if wp.DayStartTime.Valid {
+		displayWp.DayStartTime = wp.DayStartTime.Time.Format("15:04:05")
+	}
+	return displayWp
 }
 
 func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,16 +94,21 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var dayStartTime sql.NullString
+	var dayStartTime sql.NullTime // Changed to sql.NullTime
 	if input.DayStartTime != "" {
-		dayStartTime.String = input.DayStartTime + ":00"
+		parsedTime, err := time.Parse("15:04", input.DayStartTime)
+		if err != nil {
+			app.badRequestResponse(w, r, errors.New("invalid day_start_time format, please use HH:MM"))
+			return
+		}
+		dayStartTime.Time = parsedTime
 		dayStartTime.Valid = true
 	}
 
 	wp := &store.WeeklyPlan{
 		StudentID:                student.ID,
 		StartDateOfWeek:          startDate,
-		DayStartTime:             dayStartTime,
+		DayStartTime:             dayStartTime, // Assign sql.NullTime
 		MaxStudyTimeHoursPerWeek: input.MaxStudyTimeHoursPerWeek,
 	}
 
@@ -92,7 +118,8 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"weekly_plan": wp}, nil)
+	// Use helper to format DayStartTime for the response
+	err = app.writeJSON(w, http.StatusOK, envelope{"weekly_plan": mapWeeklyPlanToDisplay(wp)}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -111,7 +138,13 @@ func (app *application) listWeeklyPlansHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"weekly_plans": plans}, nil)
+	// Map all weekly plans to their display format
+	displayPlans := make([]*WeeklyPlanDisplay, len(plans))
+	for i, p := range plans {
+		displayPlans[i] = mapWeeklyPlanToDisplay(p)
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"weekly_plans": displayPlans}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -124,7 +157,7 @@ func (app *application) getFullWeeklyCalendarHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	weeklyPlanID, err := strconv.ParseInt(chi.URLParam(r, "planID"), 10, 64) // Corrected from "weeklyPlanID" to "planID"
+	weeklyPlanID, err := strconv.ParseInt(chi.URLParam(r, "planID"), 10, 64)
 	if err != nil || weeklyPlanID < 1 {
 		app.notFoundResponse(w, r)
 		return
@@ -176,7 +209,7 @@ func (app *application) getFullWeeklyCalendarHandler(w http.ResponseWriter, r *h
 	}
 
 	response := WeeklyCalendarResponse{
-		WeeklyPlan:     weeklyPlan,
+		WeeklyPlan:     mapWeeklyPlanToDisplay(weeklyPlan),
 		DailySchedules: dailySchedules,
 	}
 
