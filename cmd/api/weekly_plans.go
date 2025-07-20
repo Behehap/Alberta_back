@@ -124,7 +124,7 @@ func (app *application) getFullWeeklyCalendarHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	weeklyPlanID, err := strconv.ParseInt(chi.URLParam(r, "weeklyPlanID"), 10, 64)
+	weeklyPlanID, err := strconv.ParseInt(chi.URLParam(r, "planID"), 10, 64) // Corrected from "weeklyPlanID" to "planID"
 	if err != nil || weeklyPlanID < 1 {
 		app.notFoundResponse(w, r)
 		return
