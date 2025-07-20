@@ -3,11 +3,23 @@
 -- Table creation and schema changes are handled by migration files.
 
 -- Step 1: Clean existing data (Optional but recommended for a clean seed)
+DELETE FROM session_reports;
+DELETE FROM study_sessions;
+DELETE FROM daily_plans;
+DELETE FROM subject_frequencies;
+DELETE FROM weekly_plans;
+DELETE FROM unavailable_times;
+DELETE FROM exam_scope_items;
+DELETE FROM private_exams;
+DELETE FROM template_rules;
+DELETE FROM schedule_templates;
 DELETE FROM book_roles;
 DELETE FROM lessons;
 DELETE FROM books;
+DELETE FROM students; -- Delete students before grades/majors
 DELETE FROM majors;
 DELETE FROM grades;
+
 
 -- Step 2: Seed grades
 INSERT INTO grades (name) VALUES
@@ -380,7 +392,7 @@ INSERT INTO lessons (book_id, name) VALUES
 ((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'فصل سوم: تابع'),
 ((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'فصل چهارم: مثلثات'),
 ((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'فصل پنجم: توابع نمایی و لگاریتمی'),
-((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'فصل ششم: حد و پیوستگی'),
+((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'ف فصل ششم: حد و پیوستگی'),
 ((SELECT id FROM books WHERE title = 'ریاضی (۲)'), 'فصل هفتم: آمار و احتمال');
 
 -- فیزیک (۲) (تجربی)
@@ -462,7 +474,7 @@ INSERT INTO lessons (book_id, name) VALUES
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس دوم: فرهنگ جهانی (۲)'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس سوم: نمونه‌های فرهنگ جهانی (۱)'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس چهارم: نمونه‌های فرهنگ جهانی (۲)'),
-((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس پنجم: باورها و ارزش‌های بنیادین فرهنگ غرب'),
+((SELECT id FROM books WHERE title = 'جامعه شنااسی (۲)'), 'درس پنجم: باورها و ارزش‌های بنیادین فرهنگ غرب'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس ششم: چگونگی تکوین فرهنگ معاصر غرب'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس هفتم: جامعۀ جهانی'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس هشتم: تحولات نظام جهانی'),
@@ -879,28 +891,34 @@ INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES
 INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES ((SELECT id FROM grades WHERE name = 'دوازدهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'تاریخ (۳)'), 'Core');
 
 
-
--- Step 5: Insert schedule template
+-- Step 8: Insert schedule template (Corrected to use Grade 10, Major 3)
 INSERT INTO schedule_templates (name, target_grade_id, target_major_id, total_study_blocks_per_week) VALUES
-('دهم انسانی - ۲۴ بلوک', 1, 3, 24);
+('دهم انسانی - ۲۴ بلوک', (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), 24);
 
--- Step 6: Template rules (with new columns, assuming they are added by migrations)
+-- Step 9: Template rules (Corrected book titles and frequencies to sum to 24 for Grade 10 Humanities)
 INSERT INTO template_rules (template_id, book_id, default_frequency, scheduling_hints, consecutive_sessions, time_preference, priority_slot) VALUES
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'ادبیات فارسی (دهم)'), 3, 'priority_first_block', FALSE, NULL, 'first'), -- Assuming 'priority_first_block' translates to priority_slot 'first'
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'عربی (دهم)'), 3, NULL, FALSE, NULL, NULL),
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'دین و زندگی (دهم)'), 2, NULL, FALSE, NULL, NULL),
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'جامعه شناسی (دهم)'), 2, 'contiguous_pair', TRUE, NULL, NULL), -- Assuming 'contiguous_pair' translates to consecutive_sessions TRUE
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'تاریخ (دهم)'), 2, NULL, FALSE, NULL, NULL),
-((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'منطق (دهم)'), 2, NULL, FALSE, NULL, NULL);
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'فارسی (۱)'), 3, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'عربی، زبان تخصصی رشته انسانی (۱)'), 3, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'دین و زندگی (۱)'), 2, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'انگلیسی (۱)'), 2, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'نگارش (۱)'), 2, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'آمادگی دفاعی'), 1, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'علوم و فنون ادبی (۱)'), 3, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'منطق'), 2, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'اقتصاد'), 2, NULL, FALSE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'جامعه شناسی (۱)'), 2, 'contiguous_pair', TRUE, NULL, NULL),
+((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'تاریخ (۱)'), 2, NULL, FALSE, NULL, NULL);
 
--- Step 7: Seed book_roles to link books to curriculum
--- For "General" vs. "Special" books:
--- If major_id is NULL, it means the book applies to ALL majors for that grade.
--- If major_id is specified, it applies only to that specific major.
+-- Step 10: Seed book_roles to link books to curriculum (Ensuring correct titles for Grade 10 Humanities)
 INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'ادبیات فارسی (دهم)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'عربی (دهم)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'دین و زندگی (دهم)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'جامعه شناسی (دهم)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'تاریخ (دهم)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'منطق (دهم)'), 'Core' );
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'فارسی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'دین و زندگی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'انگلیسی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'نگارش (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'آمادگی دفاعی'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'عربی، زبان تخصصی رشته انسانی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'علوم و فنون ادبی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'منطق'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'اقتصاد'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'جامعه شناسی (۱)'), 'Core' ),
+( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'تاریخ (۱)'), 'Core' );

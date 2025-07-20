@@ -1,4 +1,3 @@
-// internal/store/unavailable_times.go
 package store
 
 import (
@@ -7,23 +6,20 @@ import (
 	"time"
 )
 
-// UnavailableTime is a block of time when a student is busy.
 type UnavailableTime struct {
 	ID          int64  `json:"id"`
 	StudentID   int64  `json:"student_id"`
 	Title       string `json:"title,omitempty"`
-	DayOfWeek   int    `json:"day_of_week"` // Using Go's time.Weekday: Sunday=0, Monday=1, etc.
-	StartTime   string `json:"start_time"`  // Storing as "HH:MM:SS".
+	DayOfWeek   int    `json:"day_of_week"`
+	StartTime   string `json:"start_time"`
 	EndTime     string `json:"end_time"`
 	IsRecurring bool   `json:"is_recurring"`
 }
 
-// UnavailableTimeModel holds the database connection.
 type UnavailableTimeModel struct {
 	DB *sql.DB
 }
 
-// Insert adds a new unavailable time for a student.
 func (m *UnavailableTimeModel) Insert(ctx context.Context, ut *UnavailableTime) error {
 	query := `
         INSERT INTO unavailable_times (student_id, title, day_of_week, start_time, end_time, is_recurring)
@@ -38,7 +34,6 @@ func (m *UnavailableTimeModel) Insert(ctx context.Context, ut *UnavailableTime) 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ut.ID)
 }
 
-// GetAllForStudent gets all unavailable time slots for a specific student.
 func (m *UnavailableTimeModel) GetAllForStudent(ctx context.Context, studentID int64) ([]*UnavailableTime, error) {
 	query := `
         SELECT id, student_id, title, day_of_week, start_time, end_time, is_recurring
@@ -58,18 +53,23 @@ func (m *UnavailableTimeModel) GetAllForStudent(ctx context.Context, studentID i
 	var times []*UnavailableTime
 	for rows.Next() {
 		var ut UnavailableTime
+		var dbStartTime, dbEndTime time.Time
 		err := rows.Scan(
 			&ut.ID,
 			&ut.StudentID,
 			&ut.Title,
 			&ut.DayOfWeek,
-			&ut.StartTime,
-			&ut.EndTime,
+			&dbStartTime,
+			&dbEndTime,
 			&ut.IsRecurring,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		ut.StartTime = dbStartTime.Format("15:04:05")
+		ut.EndTime = dbEndTime.Format("15:04:05")
+
 		times = append(times, &ut)
 	}
 
@@ -80,12 +80,11 @@ func (m *UnavailableTimeModel) GetAllForStudent(ctx context.Context, studentID i
 	return times, nil
 }
 
-// Update modifies an existing unavailable time slot.
 func (m *UnavailableTimeModel) Update(ctx context.Context, ut *UnavailableTime) error {
 	query := `
         UPDATE unavailable_times
         SET title = $1, day_of_week = $2, start_time = $3, end_time = $4, is_recurring = $5
-        WHERE id = $6 AND student_id = $7` // Ensure student can only update their own times
+        WHERE id = $6 AND student_id = $7`
 
 	args := []any{ut.Title, ut.DayOfWeek, ut.StartTime, ut.EndTime, ut.IsRecurring, ut.ID, ut.StudentID}
 
@@ -109,7 +108,6 @@ func (m *UnavailableTimeModel) Update(ctx context.Context, ut *UnavailableTime) 
 	return nil
 }
 
-// Delete removes an unavailable time slot.
 func (m *UnavailableTimeModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound

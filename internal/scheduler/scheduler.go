@@ -89,15 +89,30 @@ func (s *Scheduler) GenerateWeeklyPlan(
 		for _, slot := range dailySlots {
 			isUnavailable := false
 			for _, ut := range unavailableTimes {
+
 				if ut.DayOfWeek == int(currentWeekday) || (!ut.IsRecurring && ut.DayOfWeek == -1) {
-					utStart, err1 := time.Parse("15:04:05", ut.StartTime)
-					utEnd, err2 := time.Parse("15:04:05", ut.EndTime)
+					var parsedUtStart, parsedUtEnd time.Time
+					var err1, err2 error
+
+					parsedUtStart, err1 = time.Parse(time.RFC3339, ut.StartTime)
+					if err1 != nil {
+
+						parsedUtStart, err1 = time.Parse("15:04:05", ut.StartTime)
+					}
+
+					parsedUtEnd, err2 = time.Parse(time.RFC3339, ut.EndTime)
+					if err2 != nil {
+
+						parsedUtEnd, err2 = time.Parse("15:04:05", ut.EndTime)
+					}
+
 					if err1 != nil || err2 != nil {
+
 						continue
 					}
 
-					unavailableStart := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), utStart.Hour(), utStart.Minute(), utStart.Second(), 0, time.Local)
-					unavailableEnd := time.Date(slot.End.Year(), slot.End.Month(), slot.End.Day(), utEnd.Hour(), utEnd.Minute(), utEnd.Second(), 0, time.Local)
+					unavailableStart := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), parsedUtStart.Hour(), parsedUtStart.Minute(), parsedUtStart.Second(), 0, time.Local)
+					unavailableEnd := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), parsedUtEnd.Hour(), parsedUtEnd.Minute(), parsedUtEnd.Second(), 0, time.Local)
 
 					if slot.Start.Before(unavailableEnd) && slot.End.After(unavailableStart) {
 						isUnavailable = true
@@ -147,8 +162,6 @@ func (s *Scheduler) GenerateWeeklyPlan(
 				continue
 			}
 
-			// Prioritize subjects with specific rules first
-			// Create a list of books to schedule for this day, ordered by priority
 			var prioritizedBooks []int64
 			var otherBooks []int64
 
@@ -156,12 +169,12 @@ func (s *Scheduler) GenerateWeeklyPlan(
 				if remainingFreq > 0 {
 					rule, hasRule := rulesMap[bookID]
 					if hasRule {
-						if rule.PrioritySlot.Valid && rule.PrioritySlot.String == "first" { // Priority 1: Always first time slots
+						if rule.PrioritySlot.Valid && rule.PrioritySlot.String == "first" {
 							prioritizedBooks = append(prioritizedBooks, bookID)
 							continue
 						}
-						if rule.TimePreference.Valid { // Priority 2: Morning/Afternoon preference
-							// More precise check: Does the first available slot match preference?
+						if rule.TimePreference.Valid {
+
 							if len(slots) > 0 {
 								slotHour := slots[0].Start.Hour()
 								if (rule.TimePreference.String == "morning" && slotHour < 12) ||
@@ -171,25 +184,23 @@ func (s *Scheduler) GenerateWeeklyPlan(
 								}
 							}
 						}
-						if rule.ConsecutiveSessions.Valid && rule.ConsecutiveSessions.Bool { // Priority 3: Consecutive sessions
-							if len(slots) >= 2 && subjectsToSchedule[bookID] >= 2 { // Check if 2 slots and 2 freq available
+						if rule.ConsecutiveSessions.Valid && rule.ConsecutiveSessions.Bool {
+							if len(slots) >= 2 && subjectsToSchedule[bookID] >= 2 {
 								prioritizedBooks = append(prioritizedBooks, bookID)
 								continue
 							}
 						}
 					}
-					otherBooks = append(otherBooks, bookID) // No specific priority, or rule not met for this day/slot
+					otherBooks = append(otherBooks, bookID)
 				}
 			}
 
-			// Sort prioritized books to ensure consistent behavior if multiple match criteria
 			sort.Slice(prioritizedBooks, func(i, j int) bool {
 				return prioritizedBooks[i] < prioritizedBooks[j]
 			})
-			// Append other books
+
 			prioritizedBooks = append(prioritizedBooks, otherBooks...)
 
-			// Schedule for this day
 			for _, selectedBookID := range prioritizedBooks {
 				if scheduledCount >= totalStudyBlocksPerWeek {
 					break
@@ -200,7 +211,6 @@ func (s *Scheduler) GenerateWeeklyPlan(
 
 				rule, hasRule := rulesMap[selectedBookID]
 
-				// Handle consecutive sessions first if applicable and still needs 2 blocks
 				if hasRule && rule.ConsecutiveSessions.Valid && rule.ConsecutiveSessions.Bool && subjectsToSchedule[selectedBookID] >= 2 && len(slots) >= 2 {
 
 					studySession1 := &store.StudySession{
@@ -215,7 +225,8 @@ func (s *Scheduler) GenerateWeeklyPlan(
 						return fmt.Errorf("failed to insert consecutive study session 1: %w", err)
 					}
 					subjectsToSchedule[selectedBookID]--
-					slots = slots[1:] // Remove used slot
+					slots = slots[1:]
+					availableSlotsPerDay[day] = slots
 					scheduledCount++
 
 					if scheduledCount < totalStudyBlocksPerWeek && subjectsToSchedule[selectedBookID] > 0 && len(slots) >= 1 {
@@ -231,14 +242,13 @@ func (s *Scheduler) GenerateWeeklyPlan(
 							return fmt.Errorf("failed to insert consecutive study session 2: %w", err)
 						}
 						subjectsToSchedule[selectedBookID]--
-						slots = slots[1:] // Remove used slot
+						slots = slots[1:]
+						availableSlotsPerDay[day] = slots
 						scheduledCount++
 					}
-					availableSlotsPerDay[day] = slots // Update for the day
-					continue                          // Move to next prioritized book
+					continue
 				}
 
-				// If not consecutive, or only 1 block needed/available, schedule a single block
 				if len(slots) > 0 && subjectsToSchedule[selectedBookID] > 0 {
 					slot := slots[0]
 					studySession := &store.StudySession{
@@ -254,15 +264,15 @@ func (s *Scheduler) GenerateWeeklyPlan(
 					}
 
 					subjectsToSchedule[selectedBookID]--
-					slots = slots[1:] // Remove used slot
+					slots = slots[1:]
+					availableSlotsPerDay[day] = slots
 					scheduledCount++
-					availableSlotsPerDay[day] = slots // Update for the day
 				}
 			}
 		}
 
 		if scheduledCount == initialScheduledCount && scheduledCount < totalStudyBlocksPerWeek {
-			break // No more blocks could be scheduled in this iteration
+			break
 		}
 	}
 
