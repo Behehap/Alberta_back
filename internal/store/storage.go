@@ -20,8 +20,8 @@ type Storage struct {
 	Lessons            LessonStore
 	UnavailableTimes   UnavailableTimeStore
 	WeeklyPlans        WeeklyPlanStore
-	DailyPlans         DailyPlanStore
 	SubjectFrequencies SubjectFrequencyStore
+	DailyPlans         DailyPlanStore
 	StudySessions      StudySessionStore
 	SessionReports     SessionReportStore
 	ExamSchedules      ExamScheduleStore
@@ -39,8 +39,8 @@ func NewStorage(db *sql.DB) *Storage {
 		Lessons:            &LessonModel{DB: db},
 		UnavailableTimes:   &UnavailableTimeModel{DB: db},
 		WeeklyPlans:        &WeeklyPlanModel{DB: db},
-		DailyPlans:         &DailyPlanModel{DB: db},
 		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
+		DailyPlans:         &DailyPlanModel{DB: db},
 		StudySessions:      &StudySessionModel{DB: db},
 		SessionReports:     &SessionReportModel{DB: db},
 		ExamSchedules:      &ExamScheduleModel{DB: db},
@@ -92,18 +92,18 @@ type WeeklyPlanStore interface {
 	Delete(ctx context.Context, id int64) error
 }
 
+type SubjectFrequencyStore interface {
+	Insert(ctx context.Context, sf *SubjectFrequency) error
+	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
+	Update(ctx context.Context, sf *SubjectFrequency) error
+	Delete(ctx context.Context, id int64) error
+}
+
 type DailyPlanStore interface {
 	Insert(ctx context.Context, dp *DailyPlan) error
 	Get(ctx context.Context, id int64) (*DailyPlan, error)
 	GetByWeeklyPlanAndDate(ctx context.Context, weeklyPlanID int64, planDate time.Time) (*DailyPlan, error)
 	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*DailyPlan, error)
-	Delete(ctx context.Context, id int64) error
-}
-
-type SubjectFrequencyStore interface {
-	Insert(ctx context.Context, sf *SubjectFrequency) error
-	GetAllForWeeklyPlan(ctx context.Context, weeklyPlanID int64) ([]*SubjectFrequency, error)
-	Update(ctx context.Context, sf *SubjectFrequency) error
 	Delete(ctx context.Context, id int64) error
 }
 

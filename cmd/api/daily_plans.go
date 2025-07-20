@@ -35,7 +35,7 @@ func (app *application) createDailyPlanHandler(w http.ResponseWriter, r *http.Re
 
 	planDate, err := time.Parse("2006-01-02", input.PlanDate)
 	if err != nil {
-		app.badRequestResponse(w, r, errors.New("invalid plan_date format, please use YYYY-MM-DD"))
+		app.badRequestResponse(w, r, errors.New("invalid date format for plan_date, please use YYYY-MM-DD"))
 		return
 	}
 

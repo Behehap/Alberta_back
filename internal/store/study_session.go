@@ -8,13 +8,13 @@ import (
 )
 
 type StudySession struct {
-	ID             int64     `json:"id"`
-	DailyPlanID    int64     `json:"daily_plan_id"`
-	BookID         int64     `json:"book_id"`
-	IsCompleted    bool      `json:"is_completed"`
-	CompletionDate time.Time `json:"completion_date,omitempty"` // Nullable in DB
-	StartTime      string    `json:"start_time"`                // Storing as "HH:MM:SS"
-	EndTime        string    `json:"end_time"`                  // Storing as "HH:MM:SS"
+	ID             int64        `json:"id"`
+	DailyPlanID    int64        `json:"daily_plan_id"`
+	BookID         int64        `json:"book_id"`
+	IsCompleted    bool         `json:"is_completed"`
+	CompletionDate sql.NullTime `json:"completion_date,omitempty"` // Changed to sql.NullTime
+	StartTime      string       `json:"start_time"`
+	EndTime        string       `json:"end_time"`
 }
 
 type StudySessionModel struct {
@@ -23,15 +23,15 @@ type StudySessionModel struct {
 
 func (m *StudySessionModel) Insert(ctx context.Context, ss *StudySession) error {
 	query := `
-        INSERT INTO study_sessions (daily_plan_id, book_id, start_time, end_time, is_completed)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, is_completed`
+        INSERT INTO study_sessions (daily_plan_id, book_id, start_time, end_time, is_completed, completion_date)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, is_completed, completion_date`
 
-	args := []any{ss.DailyPlanID, ss.BookID, ss.StartTime, ss.EndTime, ss.IsCompleted}
+	args := []any{ss.DailyPlanID, ss.BookID, ss.StartTime, ss.EndTime, ss.IsCompleted, ss.CompletionDate}
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ss.ID, &ss.IsCompleted)
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&ss.ID, &ss.IsCompleted, &ss.CompletionDate)
 }
 
 func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, error) {
@@ -47,15 +47,15 @@ func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, e
 	defer cancel()
 
 	var ss StudySession
-	var completionDate sql.NullTime
+	var dbStartTime, dbEndTime time.Time
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&ss.ID,
 		&ss.DailyPlanID,
 		&ss.BookID,
 		&ss.IsCompleted,
-		&completionDate,
-		&ss.StartTime,
-		&ss.EndTime,
+		&ss.CompletionDate, // Scan directly into sql.NullTime
+		&dbStartTime,
+		&dbEndTime,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -64,9 +64,8 @@ func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, e
 		return nil, err
 	}
 
-	if completionDate.Valid {
-		ss.CompletionDate = completionDate.Time
-	}
+	ss.StartTime = dbStartTime.Format("15:04:05")
+	ss.EndTime = dbEndTime.Format("15:04:05")
 
 	return &ss, nil
 }
@@ -90,22 +89,23 @@ func (m *StudySessionModel) GetAllForDailyPlan(ctx context.Context, dailyPlanID 
 	var sessions []*StudySession
 	for rows.Next() {
 		var ss StudySession
-		var completionDate sql.NullTime
+		var dbStartTime, dbEndTime time.Time
 		err := rows.Scan(
 			&ss.ID,
 			&ss.DailyPlanID,
 			&ss.BookID,
 			&ss.IsCompleted,
-			&completionDate,
-			&ss.StartTime,
-			&ss.EndTime,
+			&ss.CompletionDate, // Scan directly into sql.NullTime
+			&dbStartTime,
+			&dbEndTime,
 		)
 		if err != nil {
 			return nil, err
 		}
-		if completionDate.Valid {
-			ss.CompletionDate = completionDate.Time
-		}
+
+		ss.StartTime = dbStartTime.Format("15:04:05")
+		ss.EndTime = dbEndTime.Format("15:04:05")
+
 		sessions = append(sessions, &ss)
 	}
 
@@ -121,13 +121,7 @@ func (m *StudySessionModel) Update(ctx context.Context, ss *StudySession) error 
         SET daily_plan_id = $1, book_id = $2, is_completed = $3, completion_date = $4, start_time = $5, end_time = $6
         WHERE id = $7`
 
-	var completionDate sql.NullTime
-	if ss.IsCompleted {
-		completionDate.Time = time.Now()
-		completionDate.Valid = true
-	}
-
-	args := []any{ss.DailyPlanID, ss.BookID, ss.IsCompleted, completionDate, ss.StartTime, ss.EndTime, ss.ID}
+	args := []any{ss.DailyPlanID, ss.BookID, ss.IsCompleted, ss.CompletionDate, ss.StartTime, ss.EndTime, ss.ID} // Pass ss.CompletionDate directly
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -147,7 +141,6 @@ func (m *StudySessionModel) Update(ctx context.Context, ss *StudySession) error 
 	return nil
 }
 
-// Delete removes a study session.
 func (m *StudySessionModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound

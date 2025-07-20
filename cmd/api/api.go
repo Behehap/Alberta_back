@@ -9,14 +9,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type contextKey string
-
-const studentContextKey = contextKey("student")
-const weeklyPlanContextKey = contextKey("weekly_plan")
-const dailyPlanContextKey = contextKey("daily_plan")
-const studySessionContextKey = contextKey("study_session")
-const examScheduleContextKey = contextKey("exam_schedule")
-const scheduleTemplateContextKey = contextKey("schedule_template")
+// config and application structs are defined ONLY in cmd/api/main.go
+// contextKey type and all const context key declarations are defined ONLY in cmd/api/middleware.go
 
 func (app *application) run() error {
 	srv := &http.Server{
@@ -48,20 +42,6 @@ func (app *application) mount() http.Handler {
 		r.Get("/curriculum/books", app.listBooksForCurriculumHandler)
 		r.Get("/books/{bookID}/lessons", app.listLessonsForBookHandler)
 
-		r.Get("/curriculum/schedule-templates", app.listScheduleTemplatesHandler)
-		r.Route("/curriculum/schedule-templates/{templateID}", func(r chi.Router) {
-			r.Use(app.scheduleTemplateContextMiddleware)
-			r.Get("/", app.getScheduleTemplateHandler)
-
-			r.Get("/rules", app.listTemplateRulesHandler)
-			r.Post("/rules", app.createTemplateRuleHandler)
-
-			r.Route("/rules/{ruleID}", func(r chi.Router) {
-				r.Patch("/", app.updateTemplateRuleHandler)
-				r.Delete("/", app.deleteTemplateRuleHandler)
-			})
-		})
-
 		r.Post("/exam-schedules", app.createExamScheduleHandler)
 		r.Route("/exam-schedules/{examID}", func(r chi.Router) {
 			r.Use(app.examScheduleContextMiddleware)
@@ -89,15 +69,17 @@ func (app *application) mount() http.Handler {
 				r.Use(app.weeklyPlanContextMiddleware)
 
 				r.Post("/generate", app.generateWeeklyScheduleHandler)
+				r.Get("/calendar", app.getFullWeeklyCalendarHandler)
 
 				r.Get("/subject-frequencies", app.listSubjectFrequenciesHandler)
 				r.Post("/subject-frequencies", app.createSubjectFrequencyHandler)
 
-				r.Post("/daily-plans", app.createDailyPlanHandler)
 				r.Get("/daily-plans", app.listDailyPlansHandler)
+				r.Post("/daily-plans", app.createDailyPlanHandler)
 			})
 		})
 
+		// Corrected to use Study Sessions terminology and correct middleware/handlers
 		r.Route("/daily-plans/{dailyPlanID}", func(r chi.Router) {
 			r.Use(app.dailyPlanContextMiddleware)
 			r.Get("/", app.getDailyPlanHandler)

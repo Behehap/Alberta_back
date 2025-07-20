@@ -8,10 +8,10 @@ import (
 )
 
 type Lesson struct {
-	ID                        int64  `json:"id"`
-	Name                      string `json:"name"`
-	BookID                    int64  `json:"book_id"`
-	EstimatedStudyTimeMinutes int    `json:"estimated_study_time_minutes,omitempty"`
+	ID                        int64         `json:"id"`
+	Name                      string        `json:"name"`
+	BookID                    int64         `json:"book_id"`
+	EstimatedStudyTimeMinutes sql.NullInt64 `json:"estimated_study_time_minutes,omitempty"`
 }
 
 type LessonModel struct {
@@ -49,7 +49,6 @@ func (m *LessonModel) Get(ctx context.Context, id int64) (*Lesson, error) {
 	return &lesson, nil
 }
 
-// This is the new function to get all lessons for a book.
 func (m *LessonModel) GetAllForBook(ctx context.Context, bookID int64) ([]*Lesson, error) {
 	query := `
         SELECT id, name, book_id, estimated_study_time_minutes

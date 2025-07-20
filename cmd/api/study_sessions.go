@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"strconv"
@@ -35,23 +36,24 @@ func (app *application) createStudySessionHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	_, err = time.Parse("15:04", input.StartTime)
+	parsedStartTime, err := time.Parse("15:04", input.StartTime)
 	if err != nil {
 		app.badRequestResponse(w, r, errors.New("invalid start_time format, please use HH:MM"))
 		return
 	}
-	_, err = time.Parse("15:04", input.EndTime)
+	parsedEndTime, err := time.Parse("15:04", input.EndTime)
 	if err != nil {
 		app.badRequestResponse(w, r, errors.New("invalid end_time format, please use HH:MM"))
 		return
 	}
 
 	ss := &store.StudySession{
-		DailyPlanID: dailyPlanID,
-		BookID:      input.BookID,
-		StartTime:   input.StartTime + ":00",
-		EndTime:     input.EndTime + ":00",
-		IsCompleted: false,
+		DailyPlanID:    dailyPlanID,
+		BookID:         input.BookID,
+		StartTime:      parsedStartTime.Format("15:04:05"),
+		EndTime:        parsedEndTime.Format("15:04:05"),
+		IsCompleted:    false,
+		CompletionDate: sql.NullTime{}, // Initialize as null
 	}
 
 	err = app.store.StudySessions.Insert(r.Context(), ss)
@@ -127,29 +129,29 @@ func (app *application) updateStudySessionHandler(w http.ResponseWriter, r *http
 	if input.IsCompleted != nil {
 		session.IsCompleted = *input.IsCompleted
 		if *input.IsCompleted {
-			session.CompletionDate = time.Now()
+			session.CompletionDate = sql.NullTime{Time: time.Now(), Valid: true}
 		} else {
-			session.CompletionDate = time.Time{}
+			session.CompletionDate = sql.NullTime{Valid: false}
 		}
 	}
 	if input.BookID != nil {
 		session.BookID = *input.BookID
 	}
 	if input.StartTime != nil {
-		_, err = time.Parse("15:04", *input.StartTime)
+		parsedTime, err := time.Parse("15:04", *input.StartTime)
 		if err != nil {
 			app.badRequestResponse(w, r, errors.New("invalid start_time format, please use HH:MM"))
 			return
 		}
-		session.StartTime = *input.StartTime + ":00"
+		session.StartTime = parsedTime.Format("15:04:05")
 	}
 	if input.EndTime != nil {
-		_, err = time.Parse("15:04", *input.EndTime)
+		parsedTime, err := time.Parse("15:04", *input.EndTime)
 		if err != nil {
 			app.badRequestResponse(w, r, errors.New("invalid end_time format, please use HH:MM"))
 			return
 		}
-		session.EndTime = *input.EndTime + ":00"
+		session.EndTime = parsedTime.Format("15:04:05")
 	}
 
 	err = app.store.StudySessions.Update(r.Context(), session)

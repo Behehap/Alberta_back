@@ -8,21 +8,18 @@ import (
 	"time"
 )
 
-// WeeklyPlan represents a student's study plan for a specific week.
 type WeeklyPlan struct {
 	ID                       int64          `json:"id"`
 	StudentID                int64          `json:"student_id"`
 	StartDateOfWeek          time.Time      `json:"start_date_of_week"`
-	DayStartTime             sql.NullString `json:"day_start_time,omitempty"` // Stored as "HH:MM:SS"
+	DayStartTime             sql.NullString `json:"day_start_time,omitempty"`
 	MaxStudyTimeHoursPerWeek int            `json:"max_study_time_hours_per_week,omitempty"`
 }
 
-// WeeklyPlanModel holds the database connection.
 type WeeklyPlanModel struct {
 	DB *sql.DB
 }
 
-// Insert creates a new weekly plan for a student.
 func (m *WeeklyPlanModel) Insert(ctx context.Context, wp *WeeklyPlan) error {
 	query := `
         INSERT INTO weekly_plans (student_id, start_date_of_week, day_start_time, max_study_time_hours_per_week)
@@ -37,7 +34,6 @@ func (m *WeeklyPlanModel) Insert(ctx context.Context, wp *WeeklyPlan) error {
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&wp.ID)
 }
 
-// Get retrieves a weekly plan by its ID.
 func (m *WeeklyPlanModel) Get(ctx context.Context, id int64) (*WeeklyPlan, error) {
 	if id < 1 {
 		return nil, ErrorNotFound
@@ -70,7 +66,6 @@ func (m *WeeklyPlanModel) Get(ctx context.Context, id int64) (*WeeklyPlan, error
 	return &wp, nil
 }
 
-// GetAllForStudent retrieves all weekly plans for a given student.
 func (m *WeeklyPlanModel) GetAllForStudent(ctx context.Context, studentID int64) ([]*WeeklyPlan, error) {
 	query := `
         SELECT id, student_id, start_date_of_week, day_start_time, max_study_time_hours_per_week
@@ -110,7 +105,6 @@ func (m *WeeklyPlanModel) GetAllForStudent(ctx context.Context, studentID int64)
 	return plans, nil
 }
 
-// Update modifies an existing weekly plan.
 func (m *WeeklyPlanModel) Update(ctx context.Context, wp *WeeklyPlan) error {
 	query := `
         UPDATE weekly_plans
@@ -139,7 +133,6 @@ func (m *WeeklyPlanModel) Update(ctx context.Context, wp *WeeklyPlan) error {
 	return nil
 }
 
-// Delete removes a weekly plan and its associated data.
 func (m *WeeklyPlanModel) Delete(ctx context.Context, id int64) error {
 	if id < 1 {
 		return ErrorNotFound

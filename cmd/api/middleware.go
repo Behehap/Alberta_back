@@ -10,6 +10,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type contextKey string
+
+const studentContextKey = contextKey("student")
+const weeklyPlanContextKey = contextKey("weekly_plan")
+const dailyPlanContextKey = contextKey("daily_plan")
+const studySessionContextKey = contextKey("study_session")
+const examScheduleContextKey = contextKey("exam_schedule")
+const scheduleTemplateContextKey = contextKey("schedule_template")
+const weeklyStudyItemContextKey = contextKey("weekly_study_item")
+
 func (app *application) studentContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		studentID, err := strconv.ParseInt(chi.URLParam(r, "studentID"), 10, 64)
@@ -59,6 +69,7 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 	})
 }
 
+// dailyPlanContextMiddleware for /daily-plans/{dailyPlanID} routes
 func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dailyPlanID, err := strconv.ParseInt(chi.URLParam(r, "dailyPlanID"), 10, 64)
@@ -78,6 +89,7 @@ func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handl
 	})
 }
 
+// studySessionContextMiddleware for /study-sessions/{sessionID} routes
 func (app *application) studySessionContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionID, err := strconv.ParseInt(chi.URLParam(r, "sessionID"), 10, 64)

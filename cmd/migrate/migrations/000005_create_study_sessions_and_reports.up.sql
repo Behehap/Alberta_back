@@ -5,7 +5,9 @@ CREATE TABLE study_sessions (
     daily_plan_id INT NOT NULL REFERENCES daily_plans(id) ON DELETE CASCADE,
     book_id INT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-    completion_date DATE -- NULLABLE by default, will be set on completion
+    completion_date DATE,
+    start_time TIME NOT NULL, 
+    end_time TIME NOT NULL    
 );
 
 CREATE TABLE session_reports (
