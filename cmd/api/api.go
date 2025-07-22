@@ -9,9 +9,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-// config and application structs are defined ONLY in cmd/api/main.go
-// contextKey type and all const context key declarations are defined ONLY in cmd/api/middleware.go
-
 func (app *application) run() error {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.config.port),
@@ -79,7 +76,6 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
-		// Corrected to use Study Sessions terminology and correct middleware/handlers
 		r.Route("/daily-plans/{dailyPlanID}", func(r chi.Router) {
 			r.Use(app.dailyPlanContextMiddleware)
 			r.Get("/", app.getDailyPlanHandler)

@@ -69,7 +69,6 @@ func (app *application) weeklyPlanContextMiddleware(next http.Handler) http.Hand
 	})
 }
 
-// dailyPlanContextMiddleware for /daily-plans/{dailyPlanID} routes
 func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dailyPlanID, err := strconv.ParseInt(chi.URLParam(r, "dailyPlanID"), 10, 64)
@@ -89,7 +88,6 @@ func (app *application) dailyPlanContextMiddleware(next http.Handler) http.Handl
 	})
 }
 
-// studySessionContextMiddleware for /study-sessions/{sessionID} routes
 func (app *application) studySessionContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sessionID, err := strconv.ParseInt(chi.URLParam(r, "sessionID"), 10, 64)

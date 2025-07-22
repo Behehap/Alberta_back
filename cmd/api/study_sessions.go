@@ -53,7 +53,7 @@ func (app *application) createStudySessionHandler(w http.ResponseWriter, r *http
 		StartTime:      parsedStartTime.Format("15:04:05"),
 		EndTime:        parsedEndTime.Format("15:04:05"),
 		IsCompleted:    false,
-		CompletionDate: sql.NullTime{}, // Initialize as null
+		CompletionDate: sql.NullTime{},
 	}
 
 	err = app.store.StudySessions.Insert(r.Context(), ss)

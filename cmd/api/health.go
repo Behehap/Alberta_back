@@ -1,11 +1,9 @@
-// cmd/api/health.go
 package main
 
 import (
 	"net/http"
 )
 
-// healthcheckHandler shows the API's health status.
 func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	data := envelope{
 		"status": "available",

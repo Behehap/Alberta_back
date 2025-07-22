@@ -12,7 +12,7 @@ type StudySession struct {
 	DailyPlanID    int64        `json:"daily_plan_id"`
 	BookID         int64        `json:"book_id"`
 	IsCompleted    bool         `json:"is_completed"`
-	CompletionDate sql.NullTime `json:"completion_date,omitempty"` // Changed to sql.NullTime
+	CompletionDate sql.NullTime `json:"completion_date,omitempty"`
 	StartTime      string       `json:"start_time"`
 	EndTime        string       `json:"end_time"`
 }
@@ -53,7 +53,7 @@ func (m *StudySessionModel) Get(ctx context.Context, id int64) (*StudySession, e
 		&ss.DailyPlanID,
 		&ss.BookID,
 		&ss.IsCompleted,
-		&ss.CompletionDate, // Scan directly into sql.NullTime
+		&ss.CompletionDate,
 		&dbStartTime,
 		&dbEndTime,
 	)
@@ -95,7 +95,7 @@ func (m *StudySessionModel) GetAllForDailyPlan(ctx context.Context, dailyPlanID 
 			&ss.DailyPlanID,
 			&ss.BookID,
 			&ss.IsCompleted,
-			&ss.CompletionDate, // Scan directly into sql.NullTime
+			&ss.CompletionDate,
 			&dbStartTime,
 			&dbEndTime,
 		)

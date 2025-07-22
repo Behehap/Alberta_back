@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-// BookRole defines which books are part of the curriculum for a specific grade and major.
 type BookRole struct {
 	ID                   int64  `json:"id"`
 	TargetStudentGradeID int64  `json:"target_student_grade_id"`
@@ -16,13 +15,10 @@ type BookRole struct {
 	Role                 string `json:"role"`
 }
 
-// BookRoleModel holds the database connection.
 type BookRoleModel struct {
 	DB *sql.DB
 }
 
-// GetAllForCurriculum retrieves all the book roles for a given grade and major.
-// This is a key function to determine a student's required books.
 func (m *BookRoleModel) GetAllForCurriculum(ctx context.Context, gradeID, majorID int64) ([]*BookRole, error) {
 	query := `
         SELECT id, target_student_grade_id, major_id, book_id, role

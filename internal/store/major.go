@@ -1,4 +1,3 @@
-// internal/store/majors.go
 package store
 
 import (
@@ -7,18 +6,15 @@ import (
 	"time"
 )
 
-// Major represents a single academic major.
 type Major struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
 
-// MajorModel holds the database connection.
 type MajorModel struct {
 	DB *sql.DB
 }
 
-// Get retrieves a single major from the database by its ID.
 func (m *MajorModel) Get(ctx context.Context, id int64) (*Major, error) {
 	if id < 1 {
 		return nil, ErrorNotFound
@@ -41,7 +37,6 @@ func (m *MajorModel) Get(ctx context.Context, id int64) (*Major, error) {
 	return &major, nil
 }
 
-// GetAll returns a slice of all majors, ordered by their ID.
 func (m *MajorModel) GetAll(ctx context.Context) ([]*Major, error) {
 	query := `SELECT id, name FROM majors ORDER BY id`
 

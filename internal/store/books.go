@@ -1,4 +1,3 @@
-// internal/store/books.go
 package store
 
 import (
@@ -8,19 +7,16 @@ import (
 	"time"
 )
 
-// Book represents a single textbook.
 type Book struct {
 	ID                   int64  `json:"id"`
 	Title                string `json:"title"`
 	InherentGradeLevelID int64  `json:"inherent_grade_level_id"`
 }
 
-// BookModel holds the database connection.
 type BookModel struct {
 	DB *sql.DB
 }
 
-// Get fetches a single book by its ID.
 func (m *BookModel) Get(ctx context.Context, id int64) (*Book, error) {
 	if id < 1 {
 		return nil, ErrorNotFound

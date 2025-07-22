@@ -1,4 +1,3 @@
-// cmd/api/books.go
 package main
 
 import (
@@ -20,7 +19,6 @@ func (app *application) listBooksForCurriculumHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	// Call the data layer to get the books.
 	books, err := app.store.Books.GetAllForCurriculum(r.Context(), gradeID, majorID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

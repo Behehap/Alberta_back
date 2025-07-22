@@ -1,4 +1,3 @@
-// cmd/api/grades.go
 package main
 
 import (
