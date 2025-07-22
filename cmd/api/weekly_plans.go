@@ -94,7 +94,7 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var dayStartTime sql.NullTime // Changed to sql.NullTime
+	var dayStartTime sql.NullTime
 	if input.DayStartTime != "" {
 		parsedTime, err := time.Parse("15:04", input.DayStartTime)
 		if err != nil {
@@ -108,7 +108,7 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 	wp := &store.WeeklyPlan{
 		StudentID:                student.ID,
 		StartDateOfWeek:          startDate,
-		DayStartTime:             dayStartTime, // Assign sql.NullTime
+		DayStartTime:             dayStartTime,
 		MaxStudyTimeHoursPerWeek: input.MaxStudyTimeHoursPerWeek,
 	}
 
@@ -118,7 +118,6 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Use helper to format DayStartTime for the response
 	err = app.writeJSON(w, http.StatusOK, envelope{"weekly_plan": mapWeeklyPlanToDisplay(wp)}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -138,7 +137,6 @@ func (app *application) listWeeklyPlansHandler(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// Map all weekly plans to their display format
 	displayPlans := make([]*WeeklyPlanDisplay, len(plans))
 	for i, p := range plans {
 		displayPlans[i] = mapWeeklyPlanToDisplay(p)

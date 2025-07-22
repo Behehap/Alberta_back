@@ -65,10 +65,7 @@ func (s *Scheduler) GenerateWeeklyPlan(
 	dayEndDefault := time.Date(0, 1, 1, 22, 0, 0, 0, time.UTC)
 
 	if weeklyPlan.DayStartTime.Valid {
-		parsedTime, err := time.Parse("15:04:05", weeklyPlan.DayStartTime.String)
-		if err == nil {
-			dayStartDefault = parsedTime
-		}
+		dayStartDefault = weeklyPlan.DayStartTime.Time
 	}
 
 	availableSlotsPerDay := make(map[time.Weekday][]struct {
@@ -89,25 +86,21 @@ func (s *Scheduler) GenerateWeeklyPlan(
 		for _, slot := range dailySlots {
 			isUnavailable := false
 			for _, ut := range unavailableTimes {
-
 				if ut.DayOfWeek == int(currentWeekday) || (!ut.IsRecurring && ut.DayOfWeek == -1) {
 					var parsedUtStart, parsedUtEnd time.Time
 					var err1, err2 error
 
 					parsedUtStart, err1 = time.Parse(time.RFC3339, ut.StartTime)
 					if err1 != nil {
-
 						parsedUtStart, err1 = time.Parse("15:04:05", ut.StartTime)
 					}
 
 					parsedUtEnd, err2 = time.Parse(time.RFC3339, ut.EndTime)
 					if err2 != nil {
-
 						parsedUtEnd, err2 = time.Parse("15:04:05", ut.EndTime)
 					}
 
 					if err1 != nil || err2 != nil {
-
 						continue
 					}
 
@@ -174,7 +167,6 @@ func (s *Scheduler) GenerateWeeklyPlan(
 							continue
 						}
 						if rule.TimePreference.Valid {
-
 							if len(slots) > 0 {
 								slotHour := slots[0].Start.Hour()
 								if (rule.TimePreference.String == "morning" && slotHour < 12) ||
@@ -198,7 +190,6 @@ func (s *Scheduler) GenerateWeeklyPlan(
 			sort.Slice(prioritizedBooks, func(i, j int) bool {
 				return prioritizedBooks[i] < prioritizedBooks[j]
 			})
-
 			prioritizedBooks = append(prioritizedBooks, otherBooks...)
 
 			for _, selectedBookID := range prioritizedBooks {

@@ -51,7 +51,7 @@ func (m *WeeklyPlanModel) Get(ctx context.Context, id int64) (*WeeklyPlan, error
 		&wp.ID,
 		&wp.StudentID,
 		&wp.StartDateOfWeek,
-		&wp.DayStartTime, // Scan directly into sql.NullTime
+		&wp.DayStartTime,
 		&wp.MaxStudyTimeHoursPerWeek,
 	)
 
