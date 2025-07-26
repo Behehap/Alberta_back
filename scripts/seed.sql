@@ -10,7 +10,7 @@ DELETE FROM subject_frequencies;
 DELETE FROM weekly_plans;
 DELETE FROM unavailable_times;
 DELETE FROM exam_scope_items;
-DELETE FROM private_exams;
+DELETE FROM exam_schedules;
 DELETE FROM template_rules;
 DELETE FROM schedule_templates;
 DELETE FROM book_roles;
@@ -474,7 +474,7 @@ INSERT INTO lessons (book_id, name) VALUES
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس دوم: فرهنگ جهانی (۲)'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس سوم: نمونه‌های فرهنگ جهانی (۱)'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس چهارم: نمونه‌های فرهنگ جهانی (۲)'),
-((SELECT id FROM books WHERE title = 'جامعه شنااسی (۲)'), 'درس پنجم: باورها و ارزش‌های بنیادین فرهنگ غرب'),
+((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس پنجم: باورها و ارزش‌های بنیادین فرهنگ غرب'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس ششم: چگونگی تکوین فرهنگ معاصر غرب'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس هفتم: جامعۀ جهانی'),
 ((SELECT id FROM books WHERE title = 'جامعه شناسی (۲)'), 'درس هشتم: تحولات نظام جهانی'),
