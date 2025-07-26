@@ -909,16 +909,3 @@ INSERT INTO template_rules (template_id, book_id, default_frequency, scheduling_
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'جامعه شناسی (۱)'), 2, 'contiguous_pair', TRUE, NULL, NULL),
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'تاریخ (۱)'), 2, NULL, FALSE, NULL, NULL);
 
--- Step 10: Seed book_roles to link books to curriculum (Ensuring correct titles for Grade 10 Humanities)
-INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'فارسی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'دین و زندگی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'انگلیسی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'نگارش (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'آمادگی دفاعی'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'عربی، زبان تخصصی رشته انسانی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'علوم و فنون ادبی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'منطق'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'اقتصاد'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'جامعه شناسی (۱)'), 'Core' ),
-( (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), (SELECT id FROM books WHERE title = 'تاریخ (۱)'), 'Core' );
