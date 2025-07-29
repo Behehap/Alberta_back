@@ -1,33 +1,34 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
-
 echo "--- Starting Database Setup ---"
 
+# 1. Stop and remove old database volumes
 echo "1. Stopping and removing old database volumes..."
 docker-compose down -v --remove-orphans
 
+# 2. Build Docker images (if any custom images are defined, e.g., for 'api' service)
 echo "2. Building Docker images (including database image)..."
 docker-compose build
 
+# 3. Start fresh database and other services
 echo "3. Starting fresh database and other services..."
-# The migrator service will automatically run 'migrate up' here
 docker-compose up -d
 
+# 4. Wait for the PostgreSQL database to be ready
 echo "4. Waiting for the PostgreSQL database to be ready..."
-until docker-compose exec -T db sh -c "pg_isready -U admin -d social"; do
+# Loop until pg_isready reports success (or timeout)
+until docker-compose exec -T db pg_isready -U admin -d social; do
   echo "Database is unavailable - sleeping"
-  sleep 2
+  sleep 1
 done
 echo "Database is up and running!"
 
-# REMOVED STEP 5: Running database migrations (up)...
-# This step is no longer needed because the 'migrator' service in docker-compose.yml
-# is configured to run migrations automatically on startup.
-# docker-compose exec -T migrator migrate -path=/migrations -database 'postgres://admin:adminpassword@db:5432/social?sslmode=disable' up
+# 5. Run database migrations
+echo "5. Running database migrations..."
+make migrate-up # This command runs migrations on your host, connecting to the Docker DB
 
-echo "5. Seeding the database..." # Renumbered to 5
-docker-compose exec -T db sh -c "psql -U admin -d social < /app/scripts/seed.sql"
-
-echo "--- Database Setup Complete ---"
+# 6. Seeding the database
+echo "6. Seeding the database..."
+# Pipe the seed.sql content directly into the psql command inside the container
+cat scripts/seed.sql | docker-compose exec -T db psql -U admin -d social
+echo "Database seeded successfully."
