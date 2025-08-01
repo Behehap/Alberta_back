@@ -79,6 +79,7 @@ type LessonStore interface {
 
 type UnavailableTimeStore interface {
 	Insert(ctx context.Context, ut *UnavailableTime) error
+	Get(ctx context.Context, id int64) (*UnavailableTime, error)
 	GetAllForStudent(ctx context.Context, studentID int64) ([]*UnavailableTime, error)
 	Update(ctx context.Context, ut *UnavailableTime) error
 	Delete(ctx context.Context, id int64) error

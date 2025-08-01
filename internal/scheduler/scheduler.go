@@ -86,26 +86,10 @@ func (s *Scheduler) GenerateWeeklyPlan(
 		for _, slot := range dailySlots {
 			isUnavailable := false
 			for _, ut := range unavailableTimes {
-				if ut.DayOfWeek == int(currentWeekday) || (!ut.IsRecurring && ut.DayOfWeek == -1) {
-					var parsedUtStart, parsedUtEnd time.Time
-					var err1, err2 error
-
-					parsedUtStart, err1 = time.Parse(time.RFC3339, ut.StartTime)
-					if err1 != nil {
-						parsedUtStart, err1 = time.Parse("15:04:05", ut.StartTime)
-					}
-
-					parsedUtEnd, err2 = time.Parse(time.RFC3339, ut.EndTime)
-					if err2 != nil {
-						parsedUtEnd, err2 = time.Parse("15:04:05", ut.EndTime)
-					}
-
-					if err1 != nil || err2 != nil {
-						continue
-					}
-
-					unavailableStart := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), parsedUtStart.Hour(), parsedUtStart.Minute(), parsedUtStart.Second(), 0, time.Local)
-					unavailableEnd := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), parsedUtEnd.Hour(), parsedUtEnd.Minute(), parsedUtEnd.Second(), 0, time.Local)
+				customDayOfWeek := (int(currentWeekday) + 1) % 7
+				if customDayOfWeek == ut.DayOfWeek || (!ut.IsRecurring && ut.DayOfWeek == -1) {
+					unavailableStart := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), ut.StartTime.Hour(), ut.StartTime.Minute(), ut.StartTime.Second(), 0, time.Local)
+					unavailableEnd := time.Date(slot.Start.Year(), slot.Start.Month(), slot.Start.Day(), ut.EndTime.Hour(), ut.EndTime.Minute(), ut.EndTime.Second(), 0, time.Local)
 
 					if slot.Start.Before(unavailableEnd) && slot.End.After(unavailableStart) {
 						isUnavailable = true
@@ -131,11 +115,14 @@ func (s *Scheduler) GenerateWeeklyPlan(
 	}
 
 	scheduledCount := 0
-	days := []time.Weekday{time.Sunday, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday, time.Saturday}
+	days := []time.Weekday{time.Saturday, time.Sunday, time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday}
 
 	for scheduledCount < totalStudyBlocksPerWeek {
 		initialScheduledCount := scheduledCount
 		for _, day := range days {
+			if day == time.Friday {
+				continue
+			}
 			currentDate := startDateOfWeek.AddDate(0, 0, int(day-startDateOfWeek.Weekday()+7)%7)
 
 			dailyPlan, err := s.Store.DailyPlans.GetByWeeklyPlanAndDate(ctx, weeklyPlanID, currentDate)

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -181,6 +182,10 @@ func (app *application) getFullWeeklyCalendarHandler(w http.ResponseWriter, r *h
 		app.serverErrorResponse(w, r, err)
 		return
 	}
+
+	sort.Slice(dailyPlans, func(i, j int) bool {
+		return dailyPlans[i].PlanDate.Before(dailyPlans[j].PlanDate)
+	})
 
 	var dailySchedules []DailyCalendarEntry
 	for _, dp := range dailyPlans {
