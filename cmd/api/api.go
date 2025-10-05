@@ -65,6 +65,12 @@ func (app *application) mount() http.Handler {
 			r.Route("/weekly-plans/{planID}", func(r chi.Router) {
 				r.Use(app.weeklyPlanContextMiddleware)
 
+				r.Get("/recommended-template", app.getRecommendedTemplateHandler)
+				r.Post("/calculate-frequencies", app.calculateFrequenciesHandler)
+
+				r.Post("/generate", app.generateWeeklyScheduleHandler)
+				r.Get("/calendar", app.getFullWeeklyCalendarHandler)
+
 				r.Post("/generate", app.generateWeeklyScheduleHandler)
 				r.Get("/calendar", app.getFullWeeklyCalendarHandler)
 

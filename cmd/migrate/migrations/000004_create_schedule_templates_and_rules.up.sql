@@ -18,3 +18,13 @@ CREATE TABLE template_rules (
     time_preference VARCHAR(10), -- 'morning' or 'afternoon'
     priority_slot VARCHAR(20) -- 'first', 'any'
 );
+
+
+-- Add after existing tables
+CREATE TABLE template_subject_weights (
+    id SERIAL PRIMARY KEY,
+    template_id INT NOT NULL REFERENCES schedule_templates(id) ON DELETE CASCADE,
+    book_id INT NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    weight DECIMAL(3,2) NOT NULL DEFAULT 1.0,
+    UNIQUE(template_id, book_id)
+);

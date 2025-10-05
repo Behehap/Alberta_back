@@ -7,6 +7,11 @@ import (
 	"github.com/Behehap/Alberta/internal/store"
 )
 
+type ScheduleGenerationRequest struct {
+	ScheduleTemplateID *int64        `json:"schedule_template_id,omitempty"`
+	SubjectFrequencies map[int64]int `json:"subject_frequencies" validate:"required,min=1"`
+}
+
 func (app *application) generateWeeklyScheduleHandler(w http.ResponseWriter, r *http.Request) {
 	student, ok := r.Context().Value(studentContextKey).(*store.Student)
 	if !ok {
@@ -20,10 +25,7 @@ func (app *application) generateWeeklyScheduleHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	var input struct {
-		ScheduleTemplateID int64 `json:"schedule_template_id" validate:"required,gt=0"`
-	}
-
+	var input ScheduleGenerationRequest
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
@@ -36,27 +38,31 @@ func (app *application) generateWeeklyScheduleHandler(w http.ResponseWriter, r *
 		return
 	}
 
-	selectedTemplate, err := app.store.ScheduleTemplates.Get(r.Context(), input.ScheduleTemplateID)
-	if err != nil {
-		if errors.Is(err, store.ErrorNotFound) {
-			app.badRequestResponse(w, r, errors.New("selected schedule template not found"))
-			return
+	// Calculate total study blocks from frequencies
+	totalStudyBlocks := 0
+	for _, freq := range input.SubjectFrequencies {
+		totalStudyBlocks += freq
+	}
+
+	// Convert frequency map to SubjectFrequency slice for the scheduler
+	var subjectFrequencies []*store.SubjectFrequency
+	for bookID, frequency := range input.SubjectFrequencies {
+		sf := &store.SubjectFrequency{
+			WeeklyPlanID:     weeklyPlan.ID,
+			BookID:           bookID,
+			FrequencyPerWeek: frequency,
 		}
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-	totalStudyBlocks := selectedTemplate.TotalStudyBlocksPerWeek
-
-	templateRules, err := app.store.TemplateRules.GetAllForTemplate(r.Context(), selectedTemplate.ID)
-	if err != nil {
-		app.logger.Printf("Could not retrieve template rules for template %d: %v", selectedTemplate.ID, err)
-		templateRules = []*store.TemplateRule{}
+		subjectFrequencies = append(subjectFrequencies, sf)
 	}
 
-	subjectFrequencies, err := app.store.SubjectFrequencies.GetAllForWeeklyPlan(r.Context(), weeklyPlan.ID)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
+	// Get template rules if template ID is provided
+	var templateRules []*store.TemplateRule
+	if input.ScheduleTemplateID != nil {
+		templateRules, err = app.store.TemplateRules.GetAllForTemplate(r.Context(), *input.ScheduleTemplateID)
+		if err != nil {
+			app.logger.Printf("Could not retrieve template rules for template %d: %v", *input.ScheduleTemplateID, err)
+			templateRules = []*store.TemplateRule{}
+		}
 	}
 
 	unavailableTimes, err := app.store.UnavailableTimes.GetAllForStudent(r.Context(), student.ID)

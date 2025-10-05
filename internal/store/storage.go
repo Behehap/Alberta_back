@@ -13,40 +13,42 @@ var (
 )
 
 type Storage struct {
-	Students           StudentStore
-	Grades             GradeStore
-	Majors             MajorStore
-	Books              BookStore
-	Lessons            LessonStore
-	UnavailableTimes   UnavailableTimeStore
-	WeeklyPlans        WeeklyPlanStore
-	SubjectFrequencies SubjectFrequencyStore
-	DailyPlans         DailyPlanStore
-	StudySessions      StudySessionStore
-	SessionReports     SessionReportStore
-	ExamSchedules      ExamScheduleStore
-	ExamScopeItems     ExamScopeItemStore
-	ScheduleTemplates  ScheduleTemplateStore
-	TemplateRules      TemplateRuleStore
+	Students               StudentStore
+	Grades                 GradeStore
+	Majors                 MajorStore
+	Books                  BookStore
+	Lessons                LessonStore
+	UnavailableTimes       UnavailableTimeStore
+	WeeklyPlans            WeeklyPlanStore
+	SubjectFrequencies     SubjectFrequencyStore
+	DailyPlans             DailyPlanStore
+	StudySessions          StudySessionStore
+	SessionReports         SessionReportStore
+	ExamSchedules          ExamScheduleStore
+	ExamScopeItems         ExamScopeItemStore
+	ScheduleTemplates      ScheduleTemplateStore
+	TemplateRules          TemplateRuleStore
+	TemplateSubjectWeights TemplateSubjectWeightStore
 }
 
 func NewStorage(db *sql.DB) *Storage {
 	return &Storage{
-		Students:           &StudentModel{DB: db},
-		Grades:             &GradeModel{DB: db},
-		Majors:             &MajorModel{DB: db},
-		Books:              &BookModel{DB: db},
-		Lessons:            &LessonModel{DB: db},
-		UnavailableTimes:   &UnavailableTimeModel{DB: db},
-		WeeklyPlans:        &WeeklyPlanModel{DB: db},
-		SubjectFrequencies: &SubjectFrequencyModel{DB: db},
-		DailyPlans:         &DailyPlanModel{DB: db},
-		StudySessions:      &StudySessionModel{DB: db},
-		SessionReports:     &SessionReportModel{DB: db},
-		ExamSchedules:      &ExamScheduleModel{DB: db},
-		ExamScopeItems:     &ExamScopeItemModel{DB: db},
-		ScheduleTemplates:  &ScheduleTemplateModel{DB: db},
-		TemplateRules:      &TemplateRuleModel{DB: db},
+		Students:               &StudentModel{DB: db},
+		Grades:                 &GradeModel{DB: db},
+		Majors:                 &MajorModel{DB: db},
+		Books:                  &BookModel{DB: db},
+		Lessons:                &LessonModel{DB: db},
+		UnavailableTimes:       &UnavailableTimeModel{DB: db},
+		WeeklyPlans:            &WeeklyPlanModel{DB: db},
+		SubjectFrequencies:     &SubjectFrequencyModel{DB: db},
+		DailyPlans:             &DailyPlanModel{DB: db},
+		StudySessions:          &StudySessionModel{DB: db},
+		SessionReports:         &SessionReportModel{DB: db},
+		ExamSchedules:          &ExamScheduleModel{DB: db},
+		ExamScopeItems:         &ExamScopeItemModel{DB: db},
+		ScheduleTemplates:      &ScheduleTemplateModel{DB: db},
+		TemplateRules:          &TemplateRuleModel{DB: db},
+		TemplateSubjectWeights: &TemplateSubjectWeightModel{DB: db},
 	}
 }
 
@@ -148,4 +150,9 @@ type TemplateRuleStore interface {
 	GetAllForTemplate(ctx context.Context, templateID int64) ([]*TemplateRule, error)
 	Update(ctx context.Context, tr *TemplateRule) error
 	Delete(ctx context.Context, id int64) error
+}
+
+type TemplateSubjectWeightStore interface {
+	GetWeightsForTemplate(ctx context.Context, templateID int64) ([]*TemplateSubjectWeight, error)
+	SetWeight(ctx context.Context, weight *TemplateSubjectWeight) error
 }

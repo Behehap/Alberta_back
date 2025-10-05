@@ -10,12 +10,14 @@ import (
 )
 
 type Scheduler struct {
-	Store *store.Storage
+	Store           *store.Storage
+	TemplateMatcher *TemplateMatcher
 }
 
 func NewScheduler(s *store.Storage) *Scheduler {
 	return &Scheduler{
-		Store: s,
+		Store:           s,
+		TemplateMatcher: NewTemplateMatcher(s),
 	}
 }
 
@@ -255,4 +257,19 @@ func (s *Scheduler) GenerateWeeklyPlan(
 	}
 
 	return nil
+} // THIS IS THE MISSING CLOSING BRACE FOR GenerateWeeklyPlan
+
+// FindClosestTemplate delegates to TemplateMatcher
+func (s *Scheduler) FindClosestTemplate(ctx context.Context, gradeID, majorID int64, targetBlocks int) (*store.ScheduleTemplate, error) {
+	return s.TemplateMatcher.FindClosestTemplate(ctx, gradeID, majorID, targetBlocks)
+}
+
+// CalculateAdjustedFrequencies delegates to TemplateMatcher
+func (s *Scheduler) CalculateAdjustedFrequencies(
+	ctx context.Context,
+	template *store.ScheduleTemplate,
+	selectedBookIDs []int64,
+	targetBlocks int,
+) (map[int64]int, error) {
+	return s.TemplateMatcher.CalculateAdjustedFrequencies(ctx, template, selectedBookIDs, targetBlocks)
 }

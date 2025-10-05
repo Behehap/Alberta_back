@@ -895,6 +895,26 @@ INSERT INTO book_roles (target_student_grade_id, major_id, book_id, role) VALUES
 INSERT INTO schedule_templates (name, target_grade_id, target_major_id, total_study_blocks_per_week) VALUES
 ('دهم انسانی - ۲۴ بلوک', (SELECT id FROM grades WHERE name = 'دهم'), (SELECT id FROM majors WHERE name = 'علوم انسانی'), 24);
 
+
+-- Insert sample schedule templates
+INSERT INTO schedule_templates (name, target_grade_id, target_major_id, total_study_blocks_per_week) VALUES
+('Light Schedule', 1, 1, 12),
+('Standard Schedule', 1, 1, 18), 
+('Intensive Schedule', 1, 1, 24);
+
+-- Insert template rules for books
+INSERT INTO template_rules (template_id, book_id, default_frequency, priority_slot, time_preference, consecutive_sessions) VALUES
+(1, 1, 4, 'first', 'morning', true),
+(1, 2, 4, NULL, 'afternoon', false),
+(1, 3, 4, NULL, NULL, false),
+(2, 1, 6, 'first', 'morning', true),
+(2, 2, 6, NULL, 'afternoon', false), 
+(2, 3, 6, NULL, NULL, false),
+(3, 1, 8, 'first', 'morning', true),
+(3, 2, 8, NULL, 'afternoon', false),
+(3, 3, 8, NULL, NULL, false);
+
+
 -- Step 9: Template rules (Corrected book titles and frequencies to sum to 24 for Grade 10 Humanities)
 INSERT INTO template_rules (template_id, book_id, default_frequency, scheduling_hints, consecutive_sessions, time_preference, priority_slot) VALUES
 ((SELECT id FROM schedule_templates WHERE name = 'دهم انسانی - ۲۴ بلوک'), (SELECT id FROM books WHERE title = 'فارسی (۱)'), 3, NULL, FALSE, NULL, NULL),

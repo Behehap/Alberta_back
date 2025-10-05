@@ -78,9 +78,9 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 	}
 
 	var input struct {
-		StartDateOfWeek          string `json:"start_date_of_week" validate:"required"`
-		DayStartTime             string `json:"day_start_time"`
-		MaxStudyTimeHoursPerWeek int    `json:"max_study_time_hours_per_week"`
+		StartDateOfWeek string `json:"start_date_of_week" validate:"required"`
+		DayStartTime    string `json:"day_start_time"`
+		DailyStudyHours int    `json:"daily_study_hours" validate:"required,gt=0"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -106,11 +106,15 @@ func (app *application) createWeeklyPlanHandler(w http.ResponseWriter, r *http.R
 		dayStartTime.Valid = true
 	}
 
+	// Calculate total weekly blocks: daily_hours * 6 days (excluding Friday) * 60 minutes / 100-minute blocks
+	totalWeeklyMinutes := input.DailyStudyHours * 6 * 60
+	totalWeeklyBlocks := totalWeeklyMinutes / 100
+
 	wp := &store.WeeklyPlan{
 		StudentID:                student.ID,
 		StartDateOfWeek:          startDate,
 		DayStartTime:             dayStartTime,
-		MaxStudyTimeHoursPerWeek: input.MaxStudyTimeHoursPerWeek,
+		MaxStudyTimeHoursPerWeek: totalWeeklyBlocks, // This now stores calculated blocks
 	}
 
 	err = app.store.WeeklyPlans.Insert(r.Context(), wp)
